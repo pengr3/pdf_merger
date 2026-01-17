@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF Merger</title>
+    <title>PDF Merger - Client Side</title>
     <style>
         * {
             margin: 0;
@@ -26,7 +26,7 @@
             border-radius: 16px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             padding: 40px;
-            max-width: 500px;
+            max-width: 600px;
             width: 100%;
         }
 
@@ -40,8 +40,23 @@
         .subtitle {
             color: #666;
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 10px;
             font-size: 14px;
+        }
+
+        .privacy-badge {
+            background: #d4edda;
+            color: #155724;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            text-align: center;
+            margin-bottom: 30px;
+            border: 1px solid #c3e6cb;
+        }
+
+        .privacy-badge strong {
+            font-weight: 600;
         }
 
         .upload-area {
@@ -88,7 +103,7 @@
 
         .file-list {
             margin-bottom: 20px;
-            max-height: 200px;
+            max-height: 300px;
             overflow-y: auto;
         }
 
@@ -103,38 +118,66 @@
             font-size: 14px;
         }
 
-        .file-name {
-            color: #333;
+        .file-info {
             flex: 1;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
             margin-right: 10px;
         }
 
-        .file-size {
-            color: #999;
+        .file-name {
+            color: #333;
+            font-weight: 500;
+            margin-bottom: 4px;
+            word-break: break-word;
+        }
+
+        .file-details {
+            display: flex;
+            gap: 15px;
             font-size: 12px;
-            margin-right: 10px;
+            color: #999;
         }
 
         .remove-btn {
             background: #ff4757;
             color: white;
             border: none;
-            padding: 4px 12px;
+            padding: 6px 14px;
             border-radius: 4px;
             cursor: pointer;
             font-size: 12px;
             transition: background 0.2s;
+            white-space: nowrap;
         }
 
         .remove-btn:hover {
             background: #e84118;
         }
 
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .clear-btn {
+            flex: 1;
+            background: #f5f5f5;
+            color: #666;
+            border: 1px solid #ddd;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .clear-btn:hover:not(:disabled) {
+            background: #e8e8e8;
+        }
+
         .submit-btn {
-            width: 100%;
+            flex: 2;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
@@ -152,9 +195,11 @@
             box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
         }
 
-        .submit-btn:disabled {
-            background: #ccc;
+        .submit-btn:disabled,
+        .clear-btn:disabled {
+            opacity: 0.5;
             cursor: not-allowed;
+            transform: none;
             box-shadow: none;
         }
 
@@ -194,6 +239,7 @@
             animation: spin 1s linear infinite;
             display: inline-block;
             margin-right: 10px;
+            vertical-align: middle;
         }
 
         @keyframes spin {
@@ -201,11 +247,61 @@
             100% { transform: rotate(360deg); }
         }
 
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
         .footer {
-            margin-top: 20px;
+            margin-top: 25px;
             text-align: center;
             font-size: 12px;
             color: #999;
+        }
+
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        .stats {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 13px;
+            color: #666;
+            display: none;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .stats-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .stats-label {
+            font-weight: 600;
         }
     </style>
 </head>
@@ -213,45 +309,59 @@
     <div class="container">
         <h1>📄 PDF Merger</h1>
         <p class="subtitle">Combine multiple PDF files into one</p>
+        
+        <div class="privacy-badge">
+            🔒 <strong>100% Private</strong> - All processing happens in your browser. No files are uploaded to any server.
+        </div>
 
-        <form id="pdfForm">
-            <div class="upload-area" id="uploadArea">
-                <div class="upload-icon">📁</div>
-                <div class="upload-text">Click to upload or drag & drop</div>
-                <div class="upload-hint">Upload 2 or more PDF files (max 10MB each)</div>
-                <input 
-                    type="file" 
-                    id="fileInput" 
-                    accept=".pdf" 
-                    multiple 
-                    required
-                />
-            </div>
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📁</div>
+            <div class="upload-text">Click to upload or drag & drop</div>
+            <div class="upload-hint">Upload 2 or more PDF files (no size limit)</div>
+            <input 
+                type="file" 
+                id="fileInput" 
+                accept=".pdf,application/pdf" 
+                multiple
+            />
+        </div>
 
-            <div class="file-list" id="fileList"></div>
+        <div class="file-list" id="fileList"></div>
 
-            <button type="submit" class="submit-btn" id="submitBtn" disabled>
-                Merge PDFs
-            </button>
-        </form>
+        <div class="actions">
+            <button class="clear-btn" id="clearBtn" disabled>Clear All</button>
+            <button class="submit-btn" id="submitBtn" disabled>Merge PDFs</button>
+        </div>
+
+        <div class="progress-bar" id="progressBar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
 
         <div class="status" id="status"></div>
 
+        <div class="stats" id="stats"></div>
+
         <div class="footer">
-            Powered by n8n automation
+            Powered by <a href="https://pdf-lib.js.org/" target="_blank">pdf-lib</a> • 
+            Client-side processing • No data collected
         </div>
     </div>
 
+    <!-- Load pdf-lib from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+
     <script>
-        // Hardcoded webhook URL
-        const WEBHOOK_URL = 'https://pengr3.app.n8n.cloud/webhook/merge-pdf';
+        const { PDFDocument } = PDFLib;
 
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
         const fileList = document.getElementById('fileList');
         const submitBtn = document.getElementById('submitBtn');
+        const clearBtn = document.getElementById('clearBtn');
         const status = document.getElementById('status');
-        const form = document.getElementById('pdfForm');
+        const stats = document.getElementById('stats');
+        const progressBar = document.getElementById('progressBar');
+        const progressFill = document.getElementById('progressFill');
 
         let selectedFiles = [];
 
@@ -273,7 +383,13 @@
         uploadArea.addEventListener('drop', (e) => {
             e.preventDefault();
             uploadArea.classList.remove('dragover');
-            const files = Array.from(e.dataTransfer.files).filter(f => f.type === 'application/pdf');
+            const files = Array.from(e.dataTransfer.files).filter(f => 
+                f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')
+            );
+            if (files.length === 0) {
+                showStatus('Please drop only PDF files', 'error');
+                return;
+            }
             addFiles(files);
         });
 
@@ -282,25 +398,27 @@
             addFiles(Array.from(e.target.files));
         });
 
-        function addFiles(files) {
-            // Filter out files larger than 10MB
-            const validFiles = files.filter(file => {
-                if (file.size > 10485760) {
-                    showStatus(`File "${file.name}" exceeds 10MB limit`, 'error');
-                    return false;
-                }
-                return true;
-            });
-
-            selectedFiles = [...selectedFiles, ...validFiles];
+        // Clear all files
+        clearBtn.addEventListener('click', () => {
+            selectedFiles = [];
+            fileInput.value = '';
             renderFileList();
-            updateSubmitButton();
+            updateButtons();
+            hideStatus();
+            hideStats();
+        });
+
+        function addFiles(files) {
+            selectedFiles = [...selectedFiles, ...files];
+            renderFileList();
+            updateButtons();
+            hideStatus();
         }
 
         function removeFile(index) {
             selectedFiles.splice(index, 1);
             renderFileList();
-            updateSubmitButton();
+            updateButtons();
         }
 
         function renderFileList() {
@@ -311,15 +429,22 @@
 
             fileList.innerHTML = selectedFiles.map((file, index) => `
                 <div class="file-item">
-                    <span class="file-name">${file.name}</span>
-                    <span class="file-size">${(file.size / 1024 / 1024).toFixed(2)} MB</span>
-                    <button type="button" class="remove-btn" onclick="removeFile(${index})">Remove</button>
+                    <div class="file-info">
+                        <div class="file-name">${escapeHtml(file.name)}</div>
+                        <div class="file-details">
+                            <span>📄 ${(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                            <span>📅 ${new Date(file.lastModified).toLocaleDateString()}</span>
+                        </div>
+                    </div>
+                    <button class="remove-btn" onclick="removeFile(${index})">Remove</button>
                 </div>
             `).join('');
         }
 
-        function updateSubmitButton() {
-            submitBtn.disabled = selectedFiles.length < 2;
+        function updateButtons() {
+            const hasFiles = selectedFiles.length >= 2;
+            submitBtn.disabled = !hasFiles;
+            clearBtn.disabled = selectedFiles.length === 0;
         }
 
         function showStatus(message, type) {
@@ -332,73 +457,164 @@
             status.style.display = 'none';
         }
 
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
+        function showStats(data) {
+            stats.innerHTML = `
+                <div class="stats-row">
+                    <span class="stats-label">Files Merged:</span>
+                    <span>${data.filesProcessed}</span>
+                </div>
+                <div class="stats-row">
+                    <span class="stats-label">Total Pages:</span>
+                    <span>${data.totalPages}</span>
+                </div>
+                <div class="stats-row">
+                    <span class="stats-label">Output Size:</span>
+                    <span>${data.fileSizeMB} MB</span>
+                </div>
+                <div class="stats-row">
+                    <span class="stats-label">Processing Time:</span>
+                    <span>${data.processingTime}</span>
+                </div>
+            `;
+            stats.style.display = 'block';
+        }
 
+        function hideStats() {
+            stats.style.display = 'none';
+        }
+
+        function updateProgress(percent) {
+            progressBar.style.display = 'block';
+            progressFill.style.width = percent + '%';
+        }
+
+        function hideProgress() {
+            progressBar.style.display = 'none';
+            progressFill.style.width = '0%';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function mergePDFs() {
             if (selectedFiles.length < 2) {
                 showStatus('Please upload at least 2 PDF files', 'error');
                 return;
             }
 
-            // Prepare form data
-            const formData = new FormData();
-            selectedFiles.forEach(file => {
-                formData.append('data', file);
-            });
+            const startTime = Date.now();
+
+            // Disable buttons
+            submitBtn.disabled = true;
+            clearBtn.disabled = true;
 
             // Show loading
-            submitBtn.disabled = true;
             showStatus('<div class="spinner"></div> Merging PDFs...', 'loading');
+            updateProgress(0);
 
             try {
-                const response = await fetch(WEBHOOK_URL, {
-                    method: 'POST',
-                    body: formData
-                });
+                // Create a new PDF document
+                const mergedPdf = await PDFDocument.create();
+                updateProgress(10);
 
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`Server error: ${response.status} - ${errorText}`);
+                let processedCount = 0;
+                let totalPages = 0;
+
+                // Process each PDF
+                for (let i = 0; i < selectedFiles.length; i++) {
+                    const file = selectedFiles[i];
+                    
+                    try {
+                        // Read file as array buffer
+                        const arrayBuffer = await file.arrayBuffer();
+                        
+                        // Load the PDF
+                        const pdf = await PDFDocument.load(arrayBuffer);
+                        
+                        // Copy all pages
+                        const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
+                        
+                        // Add pages to merged document
+                        copiedPages.forEach(page => {
+                            mergedPdf.addPage(page);
+                            totalPages++;
+                        });
+                        
+                        processedCount++;
+                        
+                        // Update progress
+                        const progress = 10 + (i + 1) / selectedFiles.length * 80;
+                        updateProgress(progress);
+                        
+                    } catch (error) {
+                        throw new Error(`Failed to process "${file.name}": ${error.message}`);
+                    }
                 }
 
-                // Get the blob
-                const blob = await response.blob();
-                
-                // Verify we got a PDF
-                if (blob.size === 0) {
-                    throw new Error('Received empty file from server. Please check n8n workflow.');
-                }
+                showStatus('<div class="spinner"></div> Saving merged PDF...', 'loading');
+                updateProgress(95);
 
-                // Create download link
-                const url = window.URL.createObjectURL(blob);
+                // Save the merged PDF
+                const mergedPdfBytes = await mergedPdf.save();
+                updateProgress(100);
+
+                // Calculate processing time
+                const processingTime = ((Date.now() - startTime) / 1000).toFixed(2) + 's';
+
+                // Create blob and download
+                const blob = new Blob([mergedPdfBytes], { type: 'application/pdf' });
+                const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
                 a.download = 'merged.pdf';
                 document.body.appendChild(a);
                 a.click();
-                window.URL.revokeObjectURL(url);
+                URL.revokeObjectURL(url);
                 document.body.removeChild(a);
 
-                showStatus(`✅ PDF merged successfully! (${(blob.size / 1024 / 1024).toFixed(2)} MB) Download started.`, 'success');
+                // Show success
+                showStatus('✅ PDF merged successfully! Download started.', 'success');
+                
+                // Show stats
+                showStats({
+                    filesProcessed: processedCount,
+                    totalPages: totalPages,
+                    fileSizeMB: (mergedPdfBytes.length / 1024 / 1024).toFixed(2),
+                    processingTime: processingTime
+                });
 
-                // Reset form
+                // Hide progress
                 setTimeout(() => {
-                    selectedFiles = [];
-                    renderFileList();
-                    fileInput.value = '';
-                    updateSubmitButton();
-                    hideStatus();
-                }, 3000);
+                    hideProgress();
+                }, 1000);
 
             } catch (error) {
+                hideProgress();
                 showStatus(`❌ Error: ${error.message}`, 'error');
+                console.error('PDF merge error:', error);
             } finally {
+                // Re-enable buttons
                 submitBtn.disabled = false;
+                clearBtn.disabled = false;
             }
-        });
+        }
+
+        // Submit handler
+        submitBtn.addEventListener('click', mergePDFs);
 
         // Make removeFile globally accessible
         window.removeFile = removeFile;
+
+        // Prevent accidental page navigation with files selected
+        window.addEventListener('beforeunload', (e) => {
+            if (selectedFiles.length > 0) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        });
     </script>
 </body>
 </html>
