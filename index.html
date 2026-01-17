@@ -201,43 +201,11 @@
             100% { transform: rotate(360deg); }
         }
 
-        .config-section {
-            background: #f8f9ff;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border: 1px solid #e0e4ff;
-        }
-
-        .config-label {
-            font-size: 13px;
-            color: #666;
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-
-        .config-input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            transition: border-color 0.2s;
-        }
-
-        .config-input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .info-box {
-            background: #fff3cd;
-            border: 1px solid #ffc107;
-            color: #856404;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 13px;
-            margin-bottom: 20px;
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #999;
         }
     </style>
 </head>
@@ -245,21 +213,6 @@
     <div class="container">
         <h1>📄 PDF Merger</h1>
         <p class="subtitle">Combine multiple PDF files into one</p>
-
-        <div class="info-box">
-            ⚠️ <strong>Setup Required:</strong> Replace the webhook URL below with your n8n webhook URL
-        </div>
-
-        <div class="config-section">
-            <div class="config-label">n8n Webhook URL</div>
-            <input 
-                type="text" 
-                id="webhookUrl" 
-                class="config-input" 
-                placeholder="https://pengr3.app.n8n.cloud/webhook/merge-pdf-test"
-                value=""
-            />
-        </div>
 
         <form id="pdfForm">
             <div class="upload-area" id="uploadArea">
@@ -283,15 +236,21 @@
         </form>
 
         <div class="status" id="status"></div>
+
+        <div class="footer">
+            Powered by n8n automation
+        </div>
     </div>
 
     <script>
+        // Hardcoded webhook URL
+        const WEBHOOK_URL = 'https://pengr3.app.n8n.cloud/webhook/merge-pdf';
+
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
         const fileList = document.getElementById('fileList');
         const submitBtn = document.getElementById('submitBtn');
         const status = document.getElementById('status');
-        const webhookUrlInput = document.getElementById('webhookUrl');
         const form = document.getElementById('pdfForm');
 
         let selectedFiles = [];
@@ -360,12 +319,8 @@
         }
 
         function updateSubmitButton() {
-            const hasFiles = selectedFiles.length >= 2;
-            const hasWebhook = webhookUrlInput.value.trim() !== '';
-            submitBtn.disabled = !(hasFiles && hasWebhook);
+            submitBtn.disabled = selectedFiles.length < 2;
         }
-
-        webhookUrlInput.addEventListener('input', updateSubmitButton);
 
         function showStatus(message, type) {
             status.innerHTML = message;
@@ -379,13 +334,6 @@
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-
-            const webhookUrl = webhookUrlInput.value.trim();
-            
-            if (!webhookUrl) {
-                showStatus('Please enter your n8n webhook URL', 'error');
-                return;
-            }
 
             if (selectedFiles.length < 2) {
                 showStatus('Please upload at least 2 PDF files', 'error');
@@ -403,18 +351,24 @@
             showStatus('<div class="spinner"></div> Merging PDFs...', 'loading');
 
             try {
-                const response = await fetch(webhookUrl, {
+                const response = await fetch(WEBHOOK_URL, {
                     method: 'POST',
                     body: formData
                 });
 
                 if (!response.ok) {
-                    throw new Error(`Server error: ${response.status} ${response.statusText}`);
+                    const errorText = await response.text();
+                    throw new Error(`Server error: ${response.status} - ${errorText}`);
                 }
 
                 // Get the blob
                 const blob = await response.blob();
                 
+                // Verify we got a PDF
+                if (blob.size === 0) {
+                    throw new Error('Received empty file from server. Please check n8n workflow.');
+                }
+
                 // Create download link
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -425,7 +379,7 @@
                 window.URL.revokeObjectURL(url);
                 document.body.removeChild(a);
 
-                showStatus('✅ PDF merged successfully! Download started.', 'success');
+                showStatus(`✅ PDF merged successfully! (${(blob.size / 1024 / 1024).toFixed(2)} MB) Download started.`, 'success');
 
                 // Reset form
                 setTimeout(() => {
