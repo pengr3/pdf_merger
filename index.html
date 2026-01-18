@@ -97,6 +97,21 @@
             font-size: 13px;
         }
 
+        .reorder-hint {
+            background: #fff3cd;
+            color: #856404;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ffc107;
+            text-align: center;
+        }
+
+        .reorder-hint strong {
+            font-weight: 600;
+        }
+
         #fileInput {
             display: none;
         }
@@ -116,11 +131,61 @@
             justify-content: space-between;
             align-items: center;
             font-size: 14px;
+            cursor: move;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .file-item:hover {
+            background: #ebebeb;
+            transform: translateX(2px);
+        }
+
+        .file-item.dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+
+        .file-item.drag-over {
+            border-top: 3px solid #667eea;
+            margin-top: 8px;
         }
 
         .file-info {
             flex: 1;
             margin-right: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .drag-handle {
+            font-size: 18px;
+            color: #999;
+            cursor: grab;
+            user-select: none;
+        }
+
+        .drag-handle:active {
+            cursor: grabbing;
+        }
+
+        .file-order {
+            background: #667eea;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 13px;
+            flex-shrink: 0;
+        }
+
+        .file-content {
+            flex: 1;
         }
 
         .file-name {
@@ -328,6 +393,10 @@
 
         <div class="file-list" id="fileList"></div>
 
+        <div class="reorder-hint" id="reorderHint" style="display: none;">
+            ↕️ <strong>Tip:</strong> Drag and drop files to reorder them. PDFs will be merged in this order.
+        </div>
+
         <div class="actions">
             <button class="clear-btn" id="clearBtn" disabled>Clear All</button>
             <button class="submit-btn" id="submitBtn" disabled>Merge PDFs</button>
@@ -362,8 +431,10 @@
         const stats = document.getElementById('stats');
         const progressBar = document.getElementById('progressBar');
         const progressFill = document.getElementById('progressFill');
+        const reorderHint = document.getElementById('reorderHint');
 
         let selectedFiles = [];
+        let draggedIndex = null;
 
         // Click to upload
         uploadArea.addEventListener('click', () => {
@@ -424,21 +495,31 @@
         function renderFileList() {
             if (selectedFiles.length === 0) {
                 fileList.innerHTML = '';
+                reorderHint.style.display = 'none';
                 return;
             }
 
+            reorderHint.style.display = selectedFiles.length >= 2 ? 'block' : 'none';
+
             fileList.innerHTML = selectedFiles.map((file, index) => `
-                <div class="file-item">
+                <div class="file-item" draggable="true" data-index="${index}">
                     <div class="file-info">
-                        <div class="file-name">${escapeHtml(file.name)}</div>
-                        <div class="file-details">
-                            <span>📄 ${(file.size / 1024 / 1024).toFixed(2)} MB</span>
-                            <span>📅 ${new Date(file.lastModified).toLocaleDateString()}</span>
+                        <span class="drag-handle">⋮⋮</span>
+                        <div class="file-order">${index + 1}</div>
+                        <div class="file-content">
+                            <div class="file-name">${escapeHtml(file.name)}</div>
+                            <div class="file-details">
+                                <span>📄 ${(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                                <span>📅 ${new Date(file.lastModified).toLocaleDateString()}</span>
+                            </div>
                         </div>
                     </div>
                     <button class="remove-btn" onclick="removeFile(${index})">Remove</button>
                 </div>
             `).join('');
+
+            // Add drag and drop event listeners
+            attachDragListeners();
         }
 
         function updateButtons() {
@@ -497,6 +578,66 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        function attachDragListeners() {
+            const items = fileList.querySelectorAll('.file-item');
+            
+            items.forEach(item => {
+                item.addEventListener('dragstart', handleDragStart);
+                item.addEventListener('dragend', handleDragEnd);
+                item.addEventListener('dragover', handleDragOver);
+                item.addEventListener('drop', handleDrop);
+                item.addEventListener('dragleave', handleDragLeave);
+            });
+        }
+
+        function handleDragStart(e) {
+            draggedIndex = parseInt(e.currentTarget.dataset.index);
+            e.currentTarget.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragEnd(e) {
+            e.currentTarget.classList.remove('dragging');
+            
+            // Remove all drag-over classes
+            fileList.querySelectorAll('.file-item').forEach(item => {
+                item.classList.remove('drag-over');
+            });
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            
+            const currentIndex = parseInt(e.currentTarget.dataset.index);
+            if (currentIndex !== draggedIndex) {
+                e.currentTarget.classList.add('drag-over');
+            }
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            
+            const dropIndex = parseInt(e.currentTarget.dataset.index);
+            
+            if (draggedIndex !== null && draggedIndex !== dropIndex) {
+                // Reorder the array
+                const draggedFile = selectedFiles[draggedIndex];
+                selectedFiles.splice(draggedIndex, 1);
+                selectedFiles.splice(dropIndex, 0, draggedFile);
+                
+                // Re-render
+                renderFileList();
+            }
+            
+            draggedIndex = null;
         }
 
         async function mergePDFs() {
