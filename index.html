@@ -620,54 +620,54 @@
                 🔒 <strong>100% Private</strong> - All processing happens in your browser. No files are uploaded to any server.
             </div>
 
-            <!-- PDF MERGER -->
-            <h2>📚 PDF Merger</h2>
-            <div class="upload-area" id="uploadArea">
-                <div class="upload-icon">📁</div>
-                <div class="upload-text">Click to upload or drag & drop</div>
-                <div class="upload-hint">Upload 2 or more PDF files (no size limit)</div>
-                <input type="file" id="fileInput" accept=".pdf,application/pdf" multiple />
+            <!-- MODE SELECTION -->
+            <div class="options-group">
+                <label>Select Tool</label>
+                <div class="radio-group">
+                    <label class="radio-option selected">
+                        <input type="radio" name="pdfToolMode" value="merge" checked />
+                        <div class="option-label">
+                            <div class="option-title">📚 Merge PDFs</div>
+                            <div class="option-description">Combine multiple PDF files into one document</div>
+                        </div>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="pdfToolMode" value="convert" />
+                        <div class="option-label">
+                            <div class="option-title">🖼️ PDF to Images</div>
+                            <div class="option-description">Convert each PDF page to a downloadable image</div>
+                        </div>
+                    </label>
+                </div>
             </div>
 
-            <div class="file-list" id="fileList"></div>
+            <!-- UNIFIED UPLOAD AREA -->
+            <div class="upload-area" id="uploadAreaPdf">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">Click to upload or drag & drop</div>
+                <div class="upload-hint" id="uploadHintPdf">Upload 2 or more PDF files (no size limit)</div>
+                <input type="file" id="fileInputPdf" accept=".pdf,application/pdf" multiple />
+            </div>
 
-            <div class="reorder-hint" id="reorderHint" style="display: none;">
+            <div class="file-list" id="fileListPdf"></div>
+
+            <div class="reorder-hint" id="reorderHintPdf" style="display: none;">
                 ↕️ <strong>Tip:</strong> Drag and drop files to reorder them. PDFs will be merged in this order.
             </div>
 
             <div class="actions">
-                <button class="clear-btn" id="clearBtn" disabled>Clear All</button>
-                <button class="submit-btn" id="submitBtn" disabled>Merge PDFs</button>
+                <button class="clear-btn" id="clearBtnPdf" disabled>Clear All</button>
+                <button class="submit-btn" id="submitBtnPdf" disabled>Merge PDFs</button>
             </div>
 
-            <div class="progress-bar" id="progressBar">
-                <div class="progress-fill" id="progressFill"></div>
+            <div class="progress-bar" id="progressBarPdf">
+                <div class="progress-fill" id="progressFillPdf"></div>
             </div>
 
-            <div class="status" id="status"></div>
-            <div class="stats" id="stats"></div>
+            <div class="status" id="statusPdf"></div>
+            <div class="stats" id="statsPdf"></div>
 
-            <!-- PDF TO IMAGES -->
-            <h2>🖼️ PDF to Images Converter</h2>
-            <div class="upload-area" id="uploadAreaPdf2Img">
-                <div class="upload-icon">📄</div>
-                <div class="upload-text">Click to upload a PDF file</div>
-                <div class="upload-hint">Upload a single PDF to convert each page to an image</div>
-                <input type="file" id="fileInputPdf2Img" accept=".pdf,application/pdf" />
-            </div>
-
-            <div class="actions">
-                <button class="clear-btn" id="clearBtnPdf2Img" disabled>Clear</button>
-                <button class="submit-btn" id="submitBtnPdf2Img" disabled>Convert to Images</button>
-            </div>
-
-            <div class="progress-bar" id="progressBarPdf2Img">
-                <div class="progress-fill" id="progressFillPdf2Img"></div>
-            </div>
-
-            <div class="status" id="statusPdf2Img"></div>
-
-            <div class="image-grid" id="imageGrid"></div>
+            <div class="image-grid" id="imageGridPdf"></div>
         </div>
 
         <!-- WATERMARK INSERTER SECTION -->
@@ -773,84 +773,129 @@
             });
         });
 
-        // ========== PDF MERGER ==========
-        const uploadArea = document.getElementById('uploadArea');
-        const fileInput = document.getElementById('fileInput');
-        const fileList = document.getElementById('fileList');
-        const submitBtn = document.getElementById('submitBtn');
-        const clearBtn = document.getElementById('clearBtn');
-        const status = document.getElementById('status');
-        const stats = document.getElementById('stats');
-        const progressBar = document.getElementById('progressBar');
-        const progressFill = document.getElementById('progressFill');
-        const reorderHint = document.getElementById('reorderHint');
+        // ========== PDF TOOLS (UNIFIED) ==========
+        const uploadAreaPdf = document.getElementById('uploadAreaPdf');
+        const fileInputPdf = document.getElementById('fileInputPdf');
+        const fileListPdf = document.getElementById('fileListPdf');
+        const submitBtnPdf = document.getElementById('submitBtnPdf');
+        const clearBtnPdf = document.getElementById('clearBtnPdf');
+        const statusPdf = document.getElementById('statusPdf');
+        const statsPdf = document.getElementById('statsPdf');
+        const progressBarPdf = document.getElementById('progressBarPdf');
+        const progressFillPdf = document.getElementById('progressFillPdf');
+        const reorderHintPdf = document.getElementById('reorderHintPdf');
+        const uploadHintPdf = document.getElementById('uploadHintPdf');
+        const imageGridPdf = document.getElementById('imageGridPdf');
 
-        let selectedFiles = [];
+        let selectedPdfFiles = [];
         let draggedIndex = null;
+        let pdfToolMode = 'merge';
 
-        uploadArea.addEventListener('click', () => fileInput.click());
-
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.classList.add('dragover');
+        // Mode selection radio buttons
+        document.querySelectorAll('input[name="pdfToolMode"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                pdfToolMode = e.target.value;
+                updatePdfToolMode();
+            });
         });
 
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.classList.remove('dragover');
+        function updatePdfToolMode() {
+            // Clear files when switching modes
+            selectedPdfFiles = [];
+            fileInputPdf.value = '';
+            imageGridPdf.innerHTML = '';
+            renderPdfFileList();
+
+            if (pdfToolMode === 'merge') {
+                fileInputPdf.multiple = true;
+                uploadHintPdf.textContent = 'Upload 2 or more PDF files (no size limit)';
+                submitBtnPdf.textContent = 'Merge PDFs';
+                imageGridPdf.style.display = 'none';
+            } else {
+                fileInputPdf.multiple = false;
+                uploadHintPdf.textContent = 'Upload a single PDF to convert each page to an image';
+                submitBtnPdf.textContent = 'Convert to Images';
+                imageGridPdf.style.display = 'grid';
+            }
+
+            updatePdfButtons();
+            hideStatus('statusPdf');
+            hidePdfStats();
+        }
+
+        uploadAreaPdf.addEventListener('click', () => fileInputPdf.click());
+
+        uploadAreaPdf.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadAreaPdf.classList.add('dragover');
         });
 
-        uploadArea.addEventListener('drop', (e) => {
+        uploadAreaPdf.addEventListener('dragleave', () => {
+            uploadAreaPdf.classList.remove('dragover');
+        });
+
+        uploadAreaPdf.addEventListener('drop', (e) => {
             e.preventDefault();
-            uploadArea.classList.remove('dragover');
+            uploadAreaPdf.classList.remove('dragover');
             const files = Array.from(e.dataTransfer.files).filter(f =>
                 f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')
             );
             if (files.length === 0) {
-                showStatus('Please drop only PDF files', 'error', 'status');
-                return;
-            }
-            addFiles(files);
-        });
-
-        fileInput.addEventListener('change', (e) => {
-            addFiles(Array.from(e.target.files));
-        });
-
-        clearBtn.addEventListener('click', () => {
-            selectedFiles = [];
-            fileInput.value = '';
-            renderFileList();
-            updateButtons();
-            hideStatus('status');
-            hideStats();
-        });
-
-        function addFiles(files) {
-            selectedFiles = [...selectedFiles, ...files];
-            renderFileList();
-            updateButtons();
-            hideStatus('status');
-        }
-
-        function removeFile(index) {
-            selectedFiles.splice(index, 1);
-            renderFileList();
-            updateButtons();
-        }
-
-        function renderFileList() {
-            if (selectedFiles.length === 0) {
-                fileList.innerHTML = '';
-                reorderHint.style.display = 'none';
+                showStatus('Please drop only PDF files', 'error', 'statusPdf');
                 return;
             }
 
-            reorderHint.style.display = selectedFiles.length >= 2 ? 'block' : 'none';
+            if (pdfToolMode === 'convert') {
+                selectedPdfFiles = [files[0]];
+            } else {
+                selectedPdfFiles = [...selectedPdfFiles, ...files];
+            }
+            renderPdfFileList();
+            updatePdfButtons();
+            hideStatus('statusPdf');
+        });
 
-            fileList.innerHTML = selectedFiles.map((file, index) => `
-                <div class="file-item" draggable="true" data-index="${index}">
+        fileInputPdf.addEventListener('change', (e) => {
+            if (pdfToolMode === 'convert') {
+                selectedPdfFiles = e.target.files.length > 0 ? [e.target.files[0]] : [];
+            } else {
+                selectedPdfFiles = [...selectedPdfFiles, ...Array.from(e.target.files)];
+            }
+            renderPdfFileList();
+            updatePdfButtons();
+            hideStatus('statusPdf');
+        });
+
+        clearBtnPdf.addEventListener('click', () => {
+            selectedPdfFiles = [];
+            fileInputPdf.value = '';
+            imageGridPdf.innerHTML = '';
+            renderPdfFileList();
+            updatePdfButtons();
+            hideStatus('statusPdf');
+            hidePdfStats();
+        });
+
+        function removePdfFile(index) {
+            selectedPdfFiles.splice(index, 1);
+            renderPdfFileList();
+            updatePdfButtons();
+        }
+
+        function renderPdfFileList() {
+            if (selectedPdfFiles.length === 0) {
+                fileListPdf.innerHTML = '';
+                reorderHintPdf.style.display = 'none';
+                return;
+            }
+
+            const showDragHandle = pdfToolMode === 'merge' && selectedPdfFiles.length >= 2;
+            reorderHintPdf.style.display = showDragHandle ? 'block' : 'none';
+
+            fileListPdf.innerHTML = selectedPdfFiles.map((file, index) => `
+                <div class="file-item" ${showDragHandle ? 'draggable="true"' : ''} data-index="${index}">
                     <div class="file-info">
-                        <span class="drag-handle">⋮⋮</span>
+                        ${showDragHandle ? '<span class="drag-handle">⋮⋮</span>' : ''}
                         <div class="file-order">${index + 1}</div>
                         <div class="file-content">
                             <div class="file-name">${escapeHtml(file.name)}</div>
@@ -860,17 +905,26 @@
                             </div>
                         </div>
                     </div>
-                    <button class="remove-btn" onclick="removeFile(${index})">Remove</button>
+                    <button class="remove-btn" onclick="removePdfFile(${index})">Remove</button>
                 </div>
             `).join('');
 
-            attachDragListeners();
+            if (showDragHandle) {
+                attachPdfDragListeners();
+            }
         }
 
-        function updateButtons() {
-            const hasFiles = selectedFiles.length >= 2;
-            submitBtn.disabled = !hasFiles;
-            clearBtn.disabled = selectedFiles.length === 0;
+        function updatePdfButtons() {
+            let hasValidFiles = false;
+
+            if (pdfToolMode === 'merge') {
+                hasValidFiles = selectedPdfFiles.length >= 2;
+            } else {
+                hasValidFiles = selectedPdfFiles.length === 1;
+            }
+
+            submitBtnPdf.disabled = !hasValidFiles;
+            clearBtnPdf.disabled = selectedPdfFiles.length === 0;
         }
 
         function showStatus(message, type, statusId) {
@@ -884,8 +938,8 @@
             document.getElementById(statusId).style.display = 'none';
         }
 
-        function showStats(data) {
-            stats.innerHTML = `
+        function showPdfStats(data) {
+            statsPdf.innerHTML = `
                 <div class="stats-row">
                     <span class="stats-label">Files Merged:</span>
                     <span>${data.filesProcessed}</span>
@@ -903,11 +957,11 @@
                     <span>${data.processingTime}</span>
                 </div>
             `;
-            stats.style.display = 'block';
+            statsPdf.style.display = 'block';
         }
 
-        function hideStats() {
-            stats.style.display = 'none';
+        function hidePdfStats() {
+            statsPdf.style.display = 'none';
         }
 
         function updateProgress(percent, barId, fillId) {
@@ -926,32 +980,32 @@
             return div.innerHTML;
         }
 
-        function attachDragListeners() {
-            const items = fileList.querySelectorAll('.file-item');
+        function attachPdfDragListeners() {
+            const items = fileListPdf.querySelectorAll('.file-item');
 
             items.forEach(item => {
-                item.addEventListener('dragstart', handleDragStart);
-                item.addEventListener('dragend', handleDragEnd);
-                item.addEventListener('dragover', handleDragOver);
-                item.addEventListener('drop', handleDrop);
-                item.addEventListener('dragleave', handleDragLeave);
+                item.addEventListener('dragstart', handlePdfDragStart);
+                item.addEventListener('dragend', handlePdfDragEnd);
+                item.addEventListener('dragover', handlePdfDragOver);
+                item.addEventListener('drop', handlePdfDrop);
+                item.addEventListener('dragleave', handlePdfDragLeave);
             });
         }
 
-        function handleDragStart(e) {
+        function handlePdfDragStart(e) {
             draggedIndex = parseInt(e.currentTarget.dataset.index);
             e.currentTarget.classList.add('dragging');
             e.dataTransfer.effectAllowed = 'move';
         }
 
-        function handleDragEnd(e) {
+        function handlePdfDragEnd(e) {
             e.currentTarget.classList.remove('dragging');
-            fileList.querySelectorAll('.file-item').forEach(item => {
+            fileListPdf.querySelectorAll('.file-item').forEach(item => {
                 item.classList.remove('drag-over');
             });
         }
 
-        function handleDragOver(e) {
+        function handlePdfDragOver(e) {
             e.preventDefault();
             e.dataTransfer.dropEffect = 'move';
 
@@ -961,48 +1015,48 @@
             }
         }
 
-        function handleDragLeave(e) {
+        function handlePdfDragLeave(e) {
             e.currentTarget.classList.remove('drag-over');
         }
 
-        function handleDrop(e) {
+        function handlePdfDrop(e) {
             e.preventDefault();
             e.currentTarget.classList.remove('drag-over');
 
             const dropIndex = parseInt(e.currentTarget.dataset.index);
 
             if (draggedIndex !== null && draggedIndex !== dropIndex) {
-                const draggedFile = selectedFiles[draggedIndex];
-                selectedFiles.splice(draggedIndex, 1);
-                selectedFiles.splice(dropIndex, 0, draggedFile);
-                renderFileList();
+                const draggedFile = selectedPdfFiles[draggedIndex];
+                selectedPdfFiles.splice(draggedIndex, 1);
+                selectedPdfFiles.splice(dropIndex, 0, draggedFile);
+                renderPdfFileList();
             }
 
             draggedIndex = null;
         }
 
         async function mergePDFs() {
-            if (selectedFiles.length < 2) {
-                showStatus('Please upload at least 2 PDF files', 'error', 'status');
+            if (selectedPdfFiles.length < 2) {
+                showStatus('Please upload at least 2 PDF files', 'error', 'statusPdf');
                 return;
             }
 
             const startTime = Date.now();
-            submitBtn.disabled = true;
-            clearBtn.disabled = true;
+            submitBtnPdf.disabled = true;
+            clearBtnPdf.disabled = true;
 
-            showStatus('<div class="spinner"></div> Merging PDFs...', 'loading', 'status');
-            updateProgress(0, 'progressBar', 'progressFill');
+            showStatus('<div class="spinner"></div> Merging PDFs...', 'loading', 'statusPdf');
+            updateProgress(0, 'progressBarPdf', 'progressFillPdf');
 
             try {
                 const mergedPdf = await PDFDocument.create();
-                updateProgress(10, 'progressBar', 'progressFill');
+                updateProgress(10, 'progressBarPdf', 'progressFillPdf');
 
                 let processedCount = 0;
                 let totalPages = 0;
 
-                for (let i = 0; i < selectedFiles.length; i++) {
-                    const file = selectedFiles[i];
+                for (let i = 0; i < selectedPdfFiles.length; i++) {
+                    const file = selectedPdfFiles[i];
 
                     try {
                         const arrayBuffer = await file.arrayBuffer();
@@ -1015,19 +1069,19 @@
                         });
 
                         processedCount++;
-                        const progress = 10 + (i + 1) / selectedFiles.length * 80;
-                        updateProgress(progress, 'progressBar', 'progressFill');
+                        const progress = 10 + (i + 1) / selectedPdfFiles.length * 80;
+                        updateProgress(progress, 'progressBarPdf', 'progressFillPdf');
 
                     } catch (error) {
                         throw new Error(`Failed to process "${file.name}": ${error.message}`);
                     }
                 }
 
-                showStatus('<div class="spinner"></div> Saving merged PDF...', 'loading', 'status');
-                updateProgress(95, 'progressBar', 'progressFill');
+                showStatus('<div class="spinner"></div> Saving merged PDF...', 'loading', 'statusPdf');
+                updateProgress(95, 'progressBarPdf', 'progressFillPdf');
 
                 const mergedPdfBytes = await mergedPdf.save();
-                updateProgress(100, 'progressBar', 'progressFill');
+                updateProgress(100, 'progressBarPdf', 'progressFillPdf');
 
                 const processingTime = ((Date.now() - startTime) / 1000).toFixed(2) + 's';
 
@@ -1041,9 +1095,9 @@
                 URL.revokeObjectURL(url);
                 document.body.removeChild(a);
 
-                showStatus('✅ PDF merged successfully! Download started.', 'success', 'status');
+                showStatus('✅ PDF merged successfully! Download started.', 'success', 'statusPdf');
 
-                showStats({
+                showPdfStats({
                     filesProcessed: processedCount,
                     totalPages: totalPages,
                     fileSizeMB: (mergedPdfBytes.length / 1024 / 1024).toFixed(2),
@@ -1051,91 +1105,34 @@
                 });
 
                 setTimeout(() => {
-                    hideProgress('progressBar', 'progressFill');
+                    hideProgress('progressBarPdf', 'progressFillPdf');
                 }, 1000);
 
             } catch (error) {
-                hideProgress('progressBar', 'progressFill');
-                showStatus(`❌ Error: ${error.message}`, 'error', 'status');
+                hideProgress('progressBarPdf', 'progressFillPdf');
+                showStatus(`❌ Error: ${error.message}`, 'error', 'statusPdf');
                 console.error('PDF merge error:', error);
             } finally {
-                submitBtn.disabled = false;
-                clearBtn.disabled = false;
+                submitBtnPdf.disabled = false;
+                clearBtnPdf.disabled = false;
             }
-        }
-
-        submitBtn.addEventListener('click', mergePDFs);
-        window.removeFile = removeFile;
-
-        // ========== PDF TO IMAGES ==========
-        const uploadAreaPdf2Img = document.getElementById('uploadAreaPdf2Img');
-        const fileInputPdf2Img = document.getElementById('fileInputPdf2Img');
-        const submitBtnPdf2Img = document.getElementById('submitBtnPdf2Img');
-        const clearBtnPdf2Img = document.getElementById('clearBtnPdf2Img');
-        const imageGrid = document.getElementById('imageGrid');
-
-        let selectedPdfFile = null;
-
-        uploadAreaPdf2Img.addEventListener('click', () => fileInputPdf2Img.click());
-
-        uploadAreaPdf2Img.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadAreaPdf2Img.classList.add('dragover');
-        });
-
-        uploadAreaPdf2Img.addEventListener('dragleave', () => {
-            uploadAreaPdf2Img.classList.remove('dragover');
-        });
-
-        uploadAreaPdf2Img.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadAreaPdf2Img.classList.remove('dragover');
-            const files = Array.from(e.dataTransfer.files).filter(f =>
-                f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')
-            );
-            if (files.length === 0) {
-                showStatus('Please drop a PDF file', 'error', 'statusPdf2Img');
-                return;
-            }
-            selectedPdfFile = files[0];
-            updatePdf2ImgButtons();
-        });
-
-        fileInputPdf2Img.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                selectedPdfFile = e.target.files[0];
-                updatePdf2ImgButtons();
-            }
-        });
-
-        clearBtnPdf2Img.addEventListener('click', () => {
-            selectedPdfFile = null;
-            fileInputPdf2Img.value = '';
-            imageGrid.innerHTML = '';
-            updatePdf2ImgButtons();
-            hideStatus('statusPdf2Img');
-        });
-
-        function updatePdf2ImgButtons() {
-            submitBtnPdf2Img.disabled = !selectedPdfFile;
-            clearBtnPdf2Img.disabled = !selectedPdfFile;
         }
 
         async function convertPdfToImages() {
-            if (!selectedPdfFile) {
-                showStatus('Please upload a PDF file', 'error', 'statusPdf2Img');
+            if (selectedPdfFiles.length === 0) {
+                showStatus('Please upload a PDF file', 'error', 'statusPdf');
                 return;
             }
 
-            submitBtnPdf2Img.disabled = true;
-            clearBtnPdf2Img.disabled = true;
-            imageGrid.innerHTML = '';
+            submitBtnPdf.disabled = true;
+            clearBtnPdf.disabled = true;
+            imageGridPdf.innerHTML = '';
 
-            showStatus('<div class="spinner"></div> Converting PDF to images...', 'loading', 'statusPdf2Img');
-            updateProgress(0, 'progressBarPdf2Img', 'progressFillPdf2Img');
+            showStatus('<div class="spinner"></div> Converting PDF to images...', 'loading', 'statusPdf');
+            updateProgress(0, 'progressBarPdf', 'progressFillPdf');
 
             try {
-                const arrayBuffer = await selectedPdfFile.arrayBuffer();
+                const arrayBuffer = await selectedPdfFiles[0].arrayBuffer();
                 const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
                 const numPages = pdf.numPages;
 
@@ -1159,10 +1156,10 @@
                     images.push({ pageNum, dataUrl: imageDataUrl });
 
                     const progress = (pageNum / numPages) * 100;
-                    updateProgress(progress, 'progressBarPdf2Img', 'progressFillPdf2Img');
+                    updateProgress(progress, 'progressBarPdf', 'progressFillPdf');
                 }
 
-                imageGrid.innerHTML = images.map(img => `
+                imageGridPdf.innerHTML = images.map(img => `
                     <div class="image-item">
                         <img src="${img.dataUrl}" alt="Page ${img.pageNum}" />
                         <div style="font-size: 12px; color: #666; margin-bottom: 8px;">Page ${img.pageNum}</div>
@@ -1172,19 +1169,19 @@
                     </div>
                 `).join('');
 
-                showStatus(`✅ Successfully converted ${numPages} pages to images!`, 'success', 'statusPdf2Img');
+                showStatus(`✅ Successfully converted ${numPages} pages to images!`, 'success', 'statusPdf');
 
                 setTimeout(() => {
-                    hideProgress('progressBarPdf2Img', 'progressFillPdf2Img');
+                    hideProgress('progressBarPdf', 'progressFillPdf');
                 }, 1000);
 
             } catch (error) {
-                hideProgress('progressBarPdf2Img', 'progressFillPdf2Img');
-                showStatus(`❌ Error: ${error.message}`, 'error', 'statusPdf2Img');
+                hideProgress('progressBarPdf', 'progressFillPdf');
+                showStatus(`❌ Error: ${error.message}`, 'error', 'statusPdf');
                 console.error('PDF to images error:', error);
             } finally {
-                submitBtnPdf2Img.disabled = false;
-                clearBtnPdf2Img.disabled = false;
+                submitBtnPdf.disabled = false;
+                clearBtnPdf.disabled = false;
             }
         }
 
@@ -1197,7 +1194,16 @@
             document.body.removeChild(a);
         }
 
-        submitBtnPdf2Img.addEventListener('click', convertPdfToImages);
+        function handlePdfToolSubmit() {
+            if (pdfToolMode === 'merge') {
+                mergePDFs();
+            } else {
+                convertPdfToImages();
+            }
+        }
+
+        submitBtnPdf.addEventListener('click', handlePdfToolSubmit);
+        window.removePdfFile = removePdfFile;
         window.downloadImage = downloadImage;
 
         // ========== WATERMARK INSERTER ==========
@@ -1329,10 +1335,11 @@
 
             for (const page of pages) {
                 const { width, height } = page.getSize();
-                const watermarkWidth = 150;
-                const watermarkHeight = (watermarkImage.height / watermarkImage.width) * watermarkWidth;
+                let watermarkWidth, watermarkHeight;
 
                 if (style === 'corner') {
+                    watermarkWidth = 150;
+                    watermarkHeight = (watermarkImage.height / watermarkImage.width) * watermarkWidth;
                     page.drawImage(watermarkImage, {
                         x: width - watermarkWidth - 20,
                         y: 20,
@@ -1341,6 +1348,8 @@
                         opacity: opacityValue
                     });
                 } else if (style === 'center') {
+                    watermarkWidth = width * 0.6;
+                    watermarkHeight = (watermarkImage.height / watermarkImage.width) * watermarkWidth;
                     page.drawImage(watermarkImage, {
                         x: (width - watermarkWidth) / 2,
                         y: (height - watermarkHeight) / 2,
@@ -1349,6 +1358,8 @@
                         opacity: opacityValue * 0.5
                     });
                 } else if (style === 'diagonal') {
+                    watermarkWidth = 150;
+                    watermarkHeight = (watermarkImage.height / watermarkImage.width) * watermarkWidth;
                     const spacing = 250;
                     for (let x = -watermarkWidth; x < width + watermarkWidth; x += spacing) {
                         for (let y = -watermarkHeight; y < height + watermarkHeight; y += spacing) {
@@ -1381,18 +1392,22 @@
 
                         ctx.drawImage(img, 0, 0);
 
-                        const watermarkWidth = 200;
-                        const watermarkHeight = (watermarkImg.height / watermarkImg.width) * watermarkWidth;
+                        let watermarkWidth, watermarkHeight;
                         const opacityValue = opacity / 100;
 
-                        ctx.globalAlpha = opacityValue;
-
                         if (style === 'corner') {
+                            watermarkWidth = 200;
+                            watermarkHeight = (watermarkImg.height / watermarkImg.width) * watermarkWidth;
+                            ctx.globalAlpha = opacityValue;
                             ctx.drawImage(watermarkImg, canvas.width - watermarkWidth - 20, canvas.height - watermarkHeight - 20, watermarkWidth, watermarkHeight);
                         } else if (style === 'center') {
+                            watermarkWidth = canvas.width * 0.6;
+                            watermarkHeight = (watermarkImg.height / watermarkImg.width) * watermarkWidth;
                             ctx.globalAlpha = opacityValue * 0.5;
                             ctx.drawImage(watermarkImg, (canvas.width - watermarkWidth) / 2, (canvas.height - watermarkHeight) / 2, watermarkWidth, watermarkHeight);
                         } else if (style === 'diagonal') {
+                            watermarkWidth = 200;
+                            watermarkHeight = (watermarkImg.height / watermarkImg.width) * watermarkWidth;
                             ctx.globalAlpha = opacityValue * 0.3;
                             const spacing = 300;
                             ctx.save();
@@ -1486,7 +1501,7 @@
 
         // Prevent accidental page navigation
         window.addEventListener('beforeunload', (e) => {
-            if (selectedFiles.length > 0 || selectedPdfFile || watermarkFiles.length > 0) {
+            if (selectedPdfFiles.length > 0 || watermarkFiles.length > 0) {
                 e.preventDefault();
                 e.returnValue = '';
             }
