@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF Merger - Client Side</title>
+    <title>PDF & Image Tools - Client Side</title>
     <style>
         * {
             margin: 0;
@@ -15,10 +15,53 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             padding: 20px;
+        }
+
+        .navbar {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 20px 30px;
+            margin-bottom: 20px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .navbar-brand {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .nav-link {
+            padding: 10px 20px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            background: white;
+            color: #667eea;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .nav-link:hover {
+            background: #f0f2ff;
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
         }
 
         .container {
@@ -26,8 +69,16 @@
             border-radius: 16px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             padding: 40px;
-            max-width: 600px;
-            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .tool-section {
+            display: none;
+        }
+
+        .tool-section.active {
+            display: block;
         }
 
         h1 {
@@ -35,6 +86,15 @@
             margin-bottom: 10px;
             font-size: 28px;
             text-align: center;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 22px;
+            margin-top: 30px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
         }
 
         .subtitle {
@@ -112,7 +172,7 @@
             font-weight: 600;
         }
 
-        #fileInput {
+        input[type="file"] {
             display: none;
         }
 
@@ -222,10 +282,12 @@
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
+            flex-wrap: wrap;
         }
 
         .clear-btn {
             flex: 1;
+            min-width: 120px;
             background: #f5f5f5;
             color: #666;
             border: 1px solid #ddd;
@@ -243,6 +305,7 @@
 
         .submit-btn {
             flex: 2;
+            min-width: 150px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
@@ -368,60 +431,349 @@
         .stats-label {
             font-weight: 600;
         }
+
+        .options-group {
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .options-group label {
+            display: block;
+            margin-bottom: 15px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .radio-option:hover {
+            border-color: #667eea;
+            background: #f0f2ff;
+        }
+
+        .radio-option input[type="radio"] {
+            display: block;
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .radio-option.selected {
+            border-color: #667eea;
+            background: #f0f2ff;
+        }
+
+        .option-label {
+            flex: 1;
+        }
+
+        .option-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .option-description {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .slider-group {
+            margin-top: 10px;
+        }
+
+        .slider-group input[type="range"] {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .slider-value {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .watermark-preview {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .watermark-preview img {
+            max-width: 200px;
+            max-height: 200px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            background: white;
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .image-item {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            background: white;
+        }
+
+        .image-item img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        .image-item .download-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: background 0.2s;
+            width: 100%;
+        }
+
+        .image-item .download-btn:hover {
+            background: #5568d3;
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 15px 20px;
+            }
+
+            .container {
+                padding: 25px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .nav-links {
+                flex-direction: column;
+            }
+
+            .nav-link {
+                width: 100%;
+                text-align: center;
+            }
+
+            .actions {
+                flex-direction: column;
+            }
+
+            .clear-btn, .submit-btn {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
+    <div class="navbar">
+        <div class="navbar-brand">🛠️ PDF & Image Tools</div>
+        <div class="nav-links">
+            <button class="nav-link active" data-tool="pdf-tools">📄 PDF Tools</button>
+            <button class="nav-link" data-tool="watermark">💧 Watermark Inserter</button>
+        </div>
+    </div>
+
     <div class="container">
-        <h1>📄 PDF Merger</h1>
-        <p class="subtitle">Combine multiple PDF files into one</p>
-        
-        <div class="privacy-badge">
-            🔒 <strong>100% Private</strong> - All processing happens in your browser. No files are uploaded to any server.
+        <!-- PDF TOOLS SECTION -->
+        <div id="pdf-tools" class="tool-section active">
+            <h1>📄 PDF Tools</h1>
+            <p class="subtitle">Merge PDFs and convert PDFs to images</p>
+
+            <div class="privacy-badge">
+                🔒 <strong>100% Private</strong> - All processing happens in your browser. No files are uploaded to any server.
+            </div>
+
+            <!-- PDF MERGER -->
+            <h2>📚 PDF Merger</h2>
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">Click to upload or drag & drop</div>
+                <div class="upload-hint">Upload 2 or more PDF files (no size limit)</div>
+                <input type="file" id="fileInput" accept=".pdf,application/pdf" multiple />
+            </div>
+
+            <div class="file-list" id="fileList"></div>
+
+            <div class="reorder-hint" id="reorderHint" style="display: none;">
+                ↕️ <strong>Tip:</strong> Drag and drop files to reorder them. PDFs will be merged in this order.
+            </div>
+
+            <div class="actions">
+                <button class="clear-btn" id="clearBtn" disabled>Clear All</button>
+                <button class="submit-btn" id="submitBtn" disabled>Merge PDFs</button>
+            </div>
+
+            <div class="progress-bar" id="progressBar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+
+            <div class="status" id="status"></div>
+            <div class="stats" id="stats"></div>
+
+            <!-- PDF TO IMAGES -->
+            <h2>🖼️ PDF to Images Converter</h2>
+            <div class="upload-area" id="uploadAreaPdf2Img">
+                <div class="upload-icon">📄</div>
+                <div class="upload-text">Click to upload a PDF file</div>
+                <div class="upload-hint">Upload a single PDF to convert each page to an image</div>
+                <input type="file" id="fileInputPdf2Img" accept=".pdf,application/pdf" />
+            </div>
+
+            <div class="actions">
+                <button class="clear-btn" id="clearBtnPdf2Img" disabled>Clear</button>
+                <button class="submit-btn" id="submitBtnPdf2Img" disabled>Convert to Images</button>
+            </div>
+
+            <div class="progress-bar" id="progressBarPdf2Img">
+                <div class="progress-fill" id="progressFillPdf2Img"></div>
+            </div>
+
+            <div class="status" id="statusPdf2Img"></div>
+
+            <div class="image-grid" id="imageGrid"></div>
         </div>
 
-        <div class="upload-area" id="uploadArea">
-            <div class="upload-icon">📁</div>
-            <div class="upload-text">Click to upload or drag & drop</div>
-            <div class="upload-hint">Upload 2 or more PDF files (no size limit)</div>
-            <input 
-                type="file" 
-                id="fileInput" 
-                accept=".pdf,application/pdf" 
-                multiple
-            />
+        <!-- WATERMARK INSERTER SECTION -->
+        <div id="watermark" class="tool-section">
+            <h1>💧 Watermark Inserter</h1>
+            <p class="subtitle">Add watermarks to your PDF files and images</p>
+
+            <div class="privacy-badge">
+                🔒 <strong>100% Private</strong> - All processing happens in your browser. No files are uploaded to any server.
+            </div>
+
+            <h2>Upload Your File</h2>
+            <div class="upload-area" id="uploadAreaWatermark">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">Click to upload or drag & drop</div>
+                <div class="upload-hint">Upload PDF files or images (JPG, PNG)</div>
+                <input type="file" id="fileInputWatermark" accept=".pdf,.jpg,.jpeg,.png,image/*,application/pdf" multiple />
+            </div>
+
+            <div class="file-list" id="fileListWatermark"></div>
+
+            <div class="options-group" id="watermarkOptions" style="display: none;">
+                <label>Watermark Style</label>
+                <div class="radio-group">
+                    <label class="radio-option selected">
+                        <input type="radio" name="watermarkStyle" value="corner" checked />
+                        <div class="option-label">
+                            <div class="option-title">Corner Placement</div>
+                            <div class="option-description">Watermark placed in the bottom-right corner</div>
+                        </div>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="watermarkStyle" value="center" />
+                        <div class="option-label">
+                            <div class="option-title">Center Placement</div>
+                            <div class="option-description">Watermark placed in the center with transparency</div>
+                        </div>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="watermarkStyle" value="diagonal" />
+                        <div class="option-label">
+                            <div class="option-title">Diagonal Pattern</div>
+                            <div class="option-description">Watermark repeated diagonally across the page</div>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="slider-group">
+                    <label>
+                        Watermark Opacity
+                        <span class="slider-value" id="opacityValue">50%</span>
+                    </label>
+                    <input type="range" id="opacitySlider" min="10" max="100" value="50" />
+                </div>
+
+                <div class="watermark-preview">
+                    <p style="font-size: 12px; color: #666; margin-bottom: 10px;">Watermark Preview:</p>
+                    <img src="https://raw.githubusercontent.com/pengr3/pdf_merger/main/CLMC%202026%20REGISTERED%20LOGO.png" alt="Watermark" id="watermarkPreviewImg" />
+                </div>
+            </div>
+
+            <div class="actions">
+                <button class="clear-btn" id="clearBtnWatermark" disabled>Clear All</button>
+                <button class="submit-btn" id="submitBtnWatermark" disabled>Apply Watermark</button>
+            </div>
+
+            <div class="progress-bar" id="progressBarWatermark">
+                <div class="progress-fill" id="progressFillWatermark"></div>
+            </div>
+
+            <div class="status" id="statusWatermark"></div>
         </div>
-
-        <div class="file-list" id="fileList"></div>
-
-        <div class="reorder-hint" id="reorderHint" style="display: none;">
-            ↕️ <strong>Tip:</strong> Drag and drop files to reorder them. PDFs will be merged in this order.
-        </div>
-
-        <div class="actions">
-            <button class="clear-btn" id="clearBtn" disabled>Clear All</button>
-            <button class="submit-btn" id="submitBtn" disabled>Merge PDFs</button>
-        </div>
-
-        <div class="progress-bar" id="progressBar">
-            <div class="progress-fill" id="progressFill"></div>
-        </div>
-
-        <div class="status" id="status"></div>
-
-        <div class="stats" id="stats"></div>
 
         <div class="footer">
-            Powered by <a href="https://pdf-lib.js.org/" target="_blank">pdf-lib</a> • 
+            Powered by <a href="https://pdf-lib.js.org/" target="_blank">pdf-lib</a> & <a href="https://mozilla.github.io/pdf.js/" target="_blank">PDF.js</a> •
             Client-side processing • No data collected
         </div>
     </div>
 
-    <!-- Load pdf-lib from CDN -->
+    <!-- Load libraries from CDN -->
     <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
 
     <script>
-        const { PDFDocument } = PDFLib;
+        // Initialize PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
 
+        const { PDFDocument, rgb, degrees } = PDFLib;
+
+        // Navigation
+        const navLinks = document.querySelectorAll('.nav-link');
+        const toolSections = document.querySelectorAll('.tool-section');
+
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                const toolId = link.dataset.tool;
+
+                navLinks.forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+
+                toolSections.forEach(section => section.classList.remove('active'));
+                document.getElementById(toolId).classList.add('active');
+            });
+        });
+
+        // ========== PDF MERGER ==========
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
         const fileList = document.getElementById('fileList');
@@ -436,12 +788,8 @@
         let selectedFiles = [];
         let draggedIndex = null;
 
-        // Click to upload
-        uploadArea.addEventListener('click', () => {
-            fileInput.click();
-        });
+        uploadArea.addEventListener('click', () => fileInput.click());
 
-        // Drag and drop
         uploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
             uploadArea.classList.add('dragover');
@@ -454,28 +802,26 @@
         uploadArea.addEventListener('drop', (e) => {
             e.preventDefault();
             uploadArea.classList.remove('dragover');
-            const files = Array.from(e.dataTransfer.files).filter(f => 
+            const files = Array.from(e.dataTransfer.files).filter(f =>
                 f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')
             );
             if (files.length === 0) {
-                showStatus('Please drop only PDF files', 'error');
+                showStatus('Please drop only PDF files', 'error', 'status');
                 return;
             }
             addFiles(files);
         });
 
-        // File input change
         fileInput.addEventListener('change', (e) => {
             addFiles(Array.from(e.target.files));
         });
 
-        // Clear all files
         clearBtn.addEventListener('click', () => {
             selectedFiles = [];
             fileInput.value = '';
             renderFileList();
             updateButtons();
-            hideStatus();
+            hideStatus('status');
             hideStats();
         });
 
@@ -483,7 +829,7 @@
             selectedFiles = [...selectedFiles, ...files];
             renderFileList();
             updateButtons();
-            hideStatus();
+            hideStatus('status');
         }
 
         function removeFile(index) {
@@ -518,7 +864,6 @@
                 </div>
             `).join('');
 
-            // Add drag and drop event listeners
             attachDragListeners();
         }
 
@@ -528,14 +873,15 @@
             clearBtn.disabled = selectedFiles.length === 0;
         }
 
-        function showStatus(message, type) {
-            status.innerHTML = message;
-            status.className = `status ${type}`;
-            status.style.display = 'block';
+        function showStatus(message, type, statusId) {
+            const statusEl = document.getElementById(statusId);
+            statusEl.innerHTML = message;
+            statusEl.className = `status ${type}`;
+            statusEl.style.display = 'block';
         }
 
-        function hideStatus() {
-            status.style.display = 'none';
+        function hideStatus(statusId) {
+            document.getElementById(statusId).style.display = 'none';
         }
 
         function showStats(data) {
@@ -564,14 +910,14 @@
             stats.style.display = 'none';
         }
 
-        function updateProgress(percent) {
-            progressBar.style.display = 'block';
-            progressFill.style.width = percent + '%';
+        function updateProgress(percent, barId, fillId) {
+            document.getElementById(barId).style.display = 'block';
+            document.getElementById(fillId).style.width = percent + '%';
         }
 
-        function hideProgress() {
-            progressBar.style.display = 'none';
-            progressFill.style.width = '0%';
+        function hideProgress(barId, fillId) {
+            document.getElementById(barId).style.display = 'none';
+            document.getElementById(fillId).style.width = '0%';
         }
 
         function escapeHtml(text) {
@@ -582,7 +928,7 @@
 
         function attachDragListeners() {
             const items = fileList.querySelectorAll('.file-item');
-            
+
             items.forEach(item => {
                 item.addEventListener('dragstart', handleDragStart);
                 item.addEventListener('dragend', handleDragEnd);
@@ -600,8 +946,6 @@
 
         function handleDragEnd(e) {
             e.currentTarget.classList.remove('dragging');
-            
-            // Remove all drag-over classes
             fileList.querySelectorAll('.file-item').forEach(item => {
                 item.classList.remove('drag-over');
             });
@@ -610,7 +954,7 @@
         function handleDragOver(e) {
             e.preventDefault();
             e.dataTransfer.dropEffect = 'move';
-            
+
             const currentIndex = parseInt(e.currentTarget.dataset.index);
             if (currentIndex !== draggedIndex) {
                 e.currentTarget.classList.add('drag-over');
@@ -624,88 +968,69 @@
         function handleDrop(e) {
             e.preventDefault();
             e.currentTarget.classList.remove('drag-over');
-            
+
             const dropIndex = parseInt(e.currentTarget.dataset.index);
-            
+
             if (draggedIndex !== null && draggedIndex !== dropIndex) {
-                // Reorder the array
                 const draggedFile = selectedFiles[draggedIndex];
                 selectedFiles.splice(draggedIndex, 1);
                 selectedFiles.splice(dropIndex, 0, draggedFile);
-                
-                // Re-render
                 renderFileList();
             }
-            
+
             draggedIndex = null;
         }
 
         async function mergePDFs() {
             if (selectedFiles.length < 2) {
-                showStatus('Please upload at least 2 PDF files', 'error');
+                showStatus('Please upload at least 2 PDF files', 'error', 'status');
                 return;
             }
 
             const startTime = Date.now();
-
-            // Disable buttons
             submitBtn.disabled = true;
             clearBtn.disabled = true;
 
-            // Show loading
-            showStatus('<div class="spinner"></div> Merging PDFs...', 'loading');
-            updateProgress(0);
+            showStatus('<div class="spinner"></div> Merging PDFs...', 'loading', 'status');
+            updateProgress(0, 'progressBar', 'progressFill');
 
             try {
-                // Create a new PDF document
                 const mergedPdf = await PDFDocument.create();
-                updateProgress(10);
+                updateProgress(10, 'progressBar', 'progressFill');
 
                 let processedCount = 0;
                 let totalPages = 0;
 
-                // Process each PDF
                 for (let i = 0; i < selectedFiles.length; i++) {
                     const file = selectedFiles[i];
-                    
+
                     try {
-                        // Read file as array buffer
                         const arrayBuffer = await file.arrayBuffer();
-                        
-                        // Load the PDF
                         const pdf = await PDFDocument.load(arrayBuffer);
-                        
-                        // Copy all pages
                         const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
-                        
-                        // Add pages to merged document
+
                         copiedPages.forEach(page => {
                             mergedPdf.addPage(page);
                             totalPages++;
                         });
-                        
+
                         processedCount++;
-                        
-                        // Update progress
                         const progress = 10 + (i + 1) / selectedFiles.length * 80;
-                        updateProgress(progress);
-                        
+                        updateProgress(progress, 'progressBar', 'progressFill');
+
                     } catch (error) {
                         throw new Error(`Failed to process "${file.name}": ${error.message}`);
                     }
                 }
 
-                showStatus('<div class="spinner"></div> Saving merged PDF...', 'loading');
-                updateProgress(95);
+                showStatus('<div class="spinner"></div> Saving merged PDF...', 'loading', 'status');
+                updateProgress(95, 'progressBar', 'progressFill');
 
-                // Save the merged PDF
                 const mergedPdfBytes = await mergedPdf.save();
-                updateProgress(100);
+                updateProgress(100, 'progressBar', 'progressFill');
 
-                // Calculate processing time
                 const processingTime = ((Date.now() - startTime) / 1000).toFixed(2) + 's';
 
-                // Create blob and download
                 const blob = new Blob([mergedPdfBytes], { type: 'application/pdf' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -716,10 +1041,8 @@
                 URL.revokeObjectURL(url);
                 document.body.removeChild(a);
 
-                // Show success
-                showStatus('✅ PDF merged successfully! Download started.', 'success');
-                
-                // Show stats
+                showStatus('✅ PDF merged successfully! Download started.', 'success', 'status');
+
                 showStats({
                     filesProcessed: processedCount,
                     totalPages: totalPages,
@@ -727,31 +1050,443 @@
                     processingTime: processingTime
                 });
 
-                // Hide progress
                 setTimeout(() => {
-                    hideProgress();
+                    hideProgress('progressBar', 'progressFill');
                 }, 1000);
 
             } catch (error) {
-                hideProgress();
-                showStatus(`❌ Error: ${error.message}`, 'error');
+                hideProgress('progressBar', 'progressFill');
+                showStatus(`❌ Error: ${error.message}`, 'error', 'status');
                 console.error('PDF merge error:', error);
             } finally {
-                // Re-enable buttons
                 submitBtn.disabled = false;
                 clearBtn.disabled = false;
             }
         }
 
-        // Submit handler
         submitBtn.addEventListener('click', mergePDFs);
-
-        // Make removeFile globally accessible
         window.removeFile = removeFile;
 
-        // Prevent accidental page navigation with files selected
+        // ========== PDF TO IMAGES ==========
+        const uploadAreaPdf2Img = document.getElementById('uploadAreaPdf2Img');
+        const fileInputPdf2Img = document.getElementById('fileInputPdf2Img');
+        const submitBtnPdf2Img = document.getElementById('submitBtnPdf2Img');
+        const clearBtnPdf2Img = document.getElementById('clearBtnPdf2Img');
+        const imageGrid = document.getElementById('imageGrid');
+
+        let selectedPdfFile = null;
+
+        uploadAreaPdf2Img.addEventListener('click', () => fileInputPdf2Img.click());
+
+        uploadAreaPdf2Img.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadAreaPdf2Img.classList.add('dragover');
+        });
+
+        uploadAreaPdf2Img.addEventListener('dragleave', () => {
+            uploadAreaPdf2Img.classList.remove('dragover');
+        });
+
+        uploadAreaPdf2Img.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadAreaPdf2Img.classList.remove('dragover');
+            const files = Array.from(e.dataTransfer.files).filter(f =>
+                f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')
+            );
+            if (files.length === 0) {
+                showStatus('Please drop a PDF file', 'error', 'statusPdf2Img');
+                return;
+            }
+            selectedPdfFile = files[0];
+            updatePdf2ImgButtons();
+        });
+
+        fileInputPdf2Img.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                selectedPdfFile = e.target.files[0];
+                updatePdf2ImgButtons();
+            }
+        });
+
+        clearBtnPdf2Img.addEventListener('click', () => {
+            selectedPdfFile = null;
+            fileInputPdf2Img.value = '';
+            imageGrid.innerHTML = '';
+            updatePdf2ImgButtons();
+            hideStatus('statusPdf2Img');
+        });
+
+        function updatePdf2ImgButtons() {
+            submitBtnPdf2Img.disabled = !selectedPdfFile;
+            clearBtnPdf2Img.disabled = !selectedPdfFile;
+        }
+
+        async function convertPdfToImages() {
+            if (!selectedPdfFile) {
+                showStatus('Please upload a PDF file', 'error', 'statusPdf2Img');
+                return;
+            }
+
+            submitBtnPdf2Img.disabled = true;
+            clearBtnPdf2Img.disabled = true;
+            imageGrid.innerHTML = '';
+
+            showStatus('<div class="spinner"></div> Converting PDF to images...', 'loading', 'statusPdf2Img');
+            updateProgress(0, 'progressBarPdf2Img', 'progressFillPdf2Img');
+
+            try {
+                const arrayBuffer = await selectedPdfFile.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                const numPages = pdf.numPages;
+
+                const images = [];
+
+                for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+                    const page = await pdf.getPage(pageNum);
+                    const viewport = page.getViewport({ scale: 2.0 });
+
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+
+                    await page.render({
+                        canvasContext: context,
+                        viewport: viewport
+                    }).promise;
+
+                    const imageDataUrl = canvas.toDataURL('image/png');
+                    images.push({ pageNum, dataUrl: imageDataUrl });
+
+                    const progress = (pageNum / numPages) * 100;
+                    updateProgress(progress, 'progressBarPdf2Img', 'progressFillPdf2Img');
+                }
+
+                imageGrid.innerHTML = images.map(img => `
+                    <div class="image-item">
+                        <img src="${img.dataUrl}" alt="Page ${img.pageNum}" />
+                        <div style="font-size: 12px; color: #666; margin-bottom: 8px;">Page ${img.pageNum}</div>
+                        <button class="download-btn" onclick="downloadImage('${img.dataUrl}', 'page-${img.pageNum}.png')">
+                            Download
+                        </button>
+                    </div>
+                `).join('');
+
+                showStatus(`✅ Successfully converted ${numPages} pages to images!`, 'success', 'statusPdf2Img');
+
+                setTimeout(() => {
+                    hideProgress('progressBarPdf2Img', 'progressFillPdf2Img');
+                }, 1000);
+
+            } catch (error) {
+                hideProgress('progressBarPdf2Img', 'progressFillPdf2Img');
+                showStatus(`❌ Error: ${error.message}`, 'error', 'statusPdf2Img');
+                console.error('PDF to images error:', error);
+            } finally {
+                submitBtnPdf2Img.disabled = false;
+                clearBtnPdf2Img.disabled = false;
+            }
+        }
+
+        function downloadImage(dataUrl, filename) {
+            const a = document.createElement('a');
+            a.href = dataUrl;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        submitBtnPdf2Img.addEventListener('click', convertPdfToImages);
+        window.downloadImage = downloadImage;
+
+        // ========== WATERMARK INSERTER ==========
+        const uploadAreaWatermark = document.getElementById('uploadAreaWatermark');
+        const fileInputWatermark = document.getElementById('fileInputWatermark');
+        const fileListWatermark = document.getElementById('fileListWatermark');
+        const submitBtnWatermark = document.getElementById('submitBtnWatermark');
+        const clearBtnWatermark = document.getElementById('clearBtnWatermark');
+        const watermarkOptions = document.getElementById('watermarkOptions');
+        const opacitySlider = document.getElementById('opacitySlider');
+        const opacityValue = document.getElementById('opacityValue');
+
+        let watermarkFiles = [];
+        const watermarkImageUrl = 'https://raw.githubusercontent.com/pengr3/pdf_merger/main/CLMC%202026%20REGISTERED%20LOGO.png';
+
+        uploadAreaWatermark.addEventListener('click', () => fileInputWatermark.click());
+
+        uploadAreaWatermark.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadAreaWatermark.classList.add('dragover');
+        });
+
+        uploadAreaWatermark.addEventListener('dragleave', () => {
+            uploadAreaWatermark.classList.remove('dragover');
+        });
+
+        uploadAreaWatermark.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadAreaWatermark.classList.remove('dragover');
+            const files = Array.from(e.dataTransfer.files).filter(f =>
+                f.type === 'application/pdf' || f.type.startsWith('image/')
+            );
+            if (files.length === 0) {
+                showStatus('Please drop PDF or image files', 'error', 'statusWatermark');
+                return;
+            }
+            addWatermarkFiles(files);
+        });
+
+        fileInputWatermark.addEventListener('change', (e) => {
+            addWatermarkFiles(Array.from(e.target.files));
+        });
+
+        clearBtnWatermark.addEventListener('click', () => {
+            watermarkFiles = [];
+            fileInputWatermark.value = '';
+            renderWatermarkFileList();
+            updateWatermarkButtons();
+            hideStatus('statusWatermark');
+        });
+
+        opacitySlider.addEventListener('input', (e) => {
+            opacityValue.textContent = e.target.value + '%';
+        });
+
+        // Radio button styling
+        document.querySelectorAll('.radio-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.radio-option').forEach(o => o.classList.remove('selected'));
+                option.classList.add('selected');
+                option.querySelector('input[type="radio"]').checked = true;
+            });
+        });
+
+        function addWatermarkFiles(files) {
+            watermarkFiles = [...watermarkFiles, ...files];
+            renderWatermarkFileList();
+            updateWatermarkButtons();
+            hideStatus('statusWatermark');
+        }
+
+        function removeWatermarkFile(index) {
+            watermarkFiles.splice(index, 1);
+            renderWatermarkFileList();
+            updateWatermarkButtons();
+        }
+
+        function renderWatermarkFileList() {
+            if (watermarkFiles.length === 0) {
+                fileListWatermark.innerHTML = '';
+                watermarkOptions.style.display = 'none';
+                return;
+            }
+
+            watermarkOptions.style.display = 'block';
+
+            fileListWatermark.innerHTML = watermarkFiles.map((file, index) => `
+                <div class="file-item">
+                    <div class="file-info">
+                        <div class="file-order">${index + 1}</div>
+                        <div class="file-content">
+                            <div class="file-name">${escapeHtml(file.name)}</div>
+                            <div class="file-details">
+                                <span>${file.type.includes('pdf') ? '📄' : '🖼️'} ${(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                                <span>📅 ${new Date(file.lastModified).toLocaleDateString()}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="remove-btn" onclick="removeWatermarkFile(${index})">Remove</button>
+                </div>
+            `).join('');
+        }
+
+        function updateWatermarkButtons() {
+            const hasFiles = watermarkFiles.length > 0;
+            submitBtnWatermark.disabled = !hasFiles;
+            clearBtnWatermark.disabled = !hasFiles;
+        }
+
+        async function loadWatermarkImage() {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = () => resolve(img);
+                img.onerror = () => reject(new Error('Failed to load watermark image'));
+                img.src = watermarkImageUrl;
+            });
+        }
+
+        async function applyWatermarkToPdf(file, watermarkImg, style, opacity) {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdfDoc = await PDFDocument.load(arrayBuffer);
+
+            const watermarkImageBytes = await fetch(watermarkImageUrl).then(res => res.arrayBuffer());
+            const watermarkImage = await pdfDoc.embedPng(watermarkImageBytes);
+
+            const pages = pdfDoc.getPages();
+            const opacityValue = opacity / 100;
+
+            for (const page of pages) {
+                const { width, height } = page.getSize();
+                const watermarkWidth = 150;
+                const watermarkHeight = (watermarkImage.height / watermarkImage.width) * watermarkWidth;
+
+                if (style === 'corner') {
+                    page.drawImage(watermarkImage, {
+                        x: width - watermarkWidth - 20,
+                        y: 20,
+                        width: watermarkWidth,
+                        height: watermarkHeight,
+                        opacity: opacityValue
+                    });
+                } else if (style === 'center') {
+                    page.drawImage(watermarkImage, {
+                        x: (width - watermarkWidth) / 2,
+                        y: (height - watermarkHeight) / 2,
+                        width: watermarkWidth,
+                        height: watermarkHeight,
+                        opacity: opacityValue * 0.5
+                    });
+                } else if (style === 'diagonal') {
+                    const spacing = 250;
+                    for (let x = -watermarkWidth; x < width + watermarkWidth; x += spacing) {
+                        for (let y = -watermarkHeight; y < height + watermarkHeight; y += spacing) {
+                            page.drawImage(watermarkImage, {
+                                x: x,
+                                y: y,
+                                width: watermarkWidth * 0.7,
+                                height: watermarkHeight * 0.7,
+                                opacity: opacityValue * 0.3,
+                                rotate: degrees(-45)
+                            });
+                        }
+                    }
+                }
+            }
+
+            return await pdfDoc.save();
+        }
+
+        async function applyWatermarkToImage(file, watermarkImg, style, opacity) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+
+                        ctx.drawImage(img, 0, 0);
+
+                        const watermarkWidth = 200;
+                        const watermarkHeight = (watermarkImg.height / watermarkImg.width) * watermarkWidth;
+                        const opacityValue = opacity / 100;
+
+                        ctx.globalAlpha = opacityValue;
+
+                        if (style === 'corner') {
+                            ctx.drawImage(watermarkImg, canvas.width - watermarkWidth - 20, canvas.height - watermarkHeight - 20, watermarkWidth, watermarkHeight);
+                        } else if (style === 'center') {
+                            ctx.globalAlpha = opacityValue * 0.5;
+                            ctx.drawImage(watermarkImg, (canvas.width - watermarkWidth) / 2, (canvas.height - watermarkHeight) / 2, watermarkWidth, watermarkHeight);
+                        } else if (style === 'diagonal') {
+                            ctx.globalAlpha = opacityValue * 0.3;
+                            const spacing = 300;
+                            ctx.save();
+                            for (let x = -watermarkWidth; x < canvas.width + watermarkWidth; x += spacing) {
+                                for (let y = -watermarkHeight; y < canvas.height + watermarkHeight; y += spacing) {
+                                    ctx.save();
+                                    ctx.translate(x + watermarkWidth / 2, y + watermarkHeight / 2);
+                                    ctx.rotate(-45 * Math.PI / 180);
+                                    ctx.drawImage(watermarkImg, -watermarkWidth * 0.7 / 2, -watermarkHeight * 0.7 / 2, watermarkWidth * 0.7, watermarkHeight * 0.7);
+                                    ctx.restore();
+                                }
+                            }
+                            ctx.restore();
+                        }
+
+                        canvas.toBlob((blob) => {
+                            resolve(blob);
+                        }, 'image/png');
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function applyWatermarks() {
+            if (watermarkFiles.length === 0) {
+                showStatus('Please upload files', 'error', 'statusWatermark');
+                return;
+            }
+
+            submitBtnWatermark.disabled = true;
+            clearBtnWatermark.disabled = true;
+
+            const style = document.querySelector('input[name="watermarkStyle"]:checked').value;
+            const opacity = parseInt(opacitySlider.value);
+
+            showStatus('<div class="spinner"></div> Applying watermarks...', 'loading', 'statusWatermark');
+            updateProgress(0, 'progressBarWatermark', 'progressFillWatermark');
+
+            try {
+                const watermarkImg = await loadWatermarkImage();
+                let processedCount = 0;
+
+                for (let i = 0; i < watermarkFiles.length; i++) {
+                    const file = watermarkFiles[i];
+                    let resultBlob;
+                    let filename;
+
+                    if (file.type === 'application/pdf') {
+                        const pdfBytes = await applyWatermarkToPdf(file, watermarkImg, style, opacity);
+                        resultBlob = new Blob([pdfBytes], { type: 'application/pdf' });
+                        filename = file.name.replace('.pdf', '_watermarked.pdf');
+                    } else {
+                        resultBlob = await applyWatermarkToImage(file, watermarkImg, style, opacity);
+                        filename = file.name.replace(/\.(jpg|jpeg|png)$/i, '_watermarked.png');
+                    }
+
+                    const url = URL.createObjectURL(resultBlob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+
+                    processedCount++;
+                    const progress = (processedCount / watermarkFiles.length) * 100;
+                    updateProgress(progress, 'progressBarWatermark', 'progressFillWatermark');
+                }
+
+                showStatus(`✅ Successfully applied watermarks to ${processedCount} file(s)!`, 'success', 'statusWatermark');
+
+                setTimeout(() => {
+                    hideProgress('progressBarWatermark', 'progressFillWatermark');
+                }, 1000);
+
+            } catch (error) {
+                hideProgress('progressBarWatermark', 'progressFillWatermark');
+                showStatus(`❌ Error: ${error.message}`, 'error', 'statusWatermark');
+                console.error('Watermark error:', error);
+            } finally {
+                submitBtnWatermark.disabled = false;
+                clearBtnWatermark.disabled = false;
+            }
+        }
+
+        submitBtnWatermark.addEventListener('click', applyWatermarks);
+        window.removeWatermarkFile = removeWatermarkFile;
+
+        // Prevent accidental page navigation
         window.addEventListener('beforeunload', (e) => {
-            if (selectedFiles.length > 0) {
+            if (selectedFiles.length > 0 || selectedPdfFile || watermarkFiles.length > 0) {
                 e.preventDefault();
                 e.returnValue = '';
             }
