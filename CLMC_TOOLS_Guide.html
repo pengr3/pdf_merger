@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CLMC TOOLS - User Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            color: #667eea;
+            font-size: 28px;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        h3 {
+            color: #764ba2;
+            font-size: 22px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        .feature-section {
+            margin-bottom: 40px;
+        }
+
+        .step {
+            background: #f8f9ff;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+        }
+
+        .step-number {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 32px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .step-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .step-content {
+            color: #666;
+            padding-left: 42px;
+        }
+
+        .tip {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        .tip-icon {
+            color: #856404;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        .tip-content {
+            color: #856404;
+        }
+
+        .feature-box {
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+
+        .feature-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .feature-desc {
+            color: #666;
+            font-size: 15px;
+        }
+
+        .privacy-badge {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 30px 0;
+            border: 1px solid #c3e6cb;
+            font-weight: 600;
+        }
+
+        .icon {
+            font-size: 24px;
+            margin-right: 8px;
+        }
+
+        ul {
+            padding-left: 42px;
+            color: #666;
+        }
+
+        ul li {
+            margin-bottom: 8px;
+        }
+
+        .button-example {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            margin: 10px 5px;
+        }
+
+        .watermark-styles {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .style-card {
+            background: #f8f9ff;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .style-card h4 {
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .style-card p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .footer {
+            text-align: center;
+            color: #999;
+            font-size: 14px;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛠️ CLMC TOOLS User Guide</h1>
+        <p class="subtitle">Complete guide to using PDF Tools and Watermark Inserter</p>
+
+        <div class="privacy-badge">
+            🔒 100% Private - All processing happens in your browser. No files are uploaded to any server.
+        </div>
+
+        <!-- PDF TOOLS SECTION -->
+        <h2><span class="icon">📄</span>PDF Tools</h2>
+
+        <div class="feature-section">
+            <h3>Option 1: Merge PDFs</h3>
+            <p style="color: #666; margin-bottom: 20px;">Combine multiple PDF files into one document</p>
+
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">1</span>
+                    Select Mode
+                </div>
+                <div class="step-content">
+                    Click on the <strong>"📚 Merge PDFs"</strong> radio button to activate merge mode.
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">2</span>
+                    Upload PDF Files
+                </div>
+                <div class="step-content">
+                    Click the upload area or drag & drop 2 or more PDF files. There's no size limit!
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">3</span>
+                    Reorder Files (Optional)
+                </div>
+                <div class="step-content">
+                    Drag and drop files to reorder them. PDFs will be merged in the order shown.
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">4</span>
+                    Merge
+                </div>
+                <div class="step-content">
+                    Click the <span class="button-example">Merge PDFs</span> button. Your merged PDF will download automatically as "merged.pdf".
+                </div>
+            </div>
+
+            <div class="tip">
+                <span class="tip-icon">💡</span>
+                <span class="tip-content"><strong>Tip:</strong> You can see the file order numbers on the left side of each file. The merged PDF will follow this exact order.</span>
+            </div>
+        </div>
+
+        <div class="feature-section">
+            <h3>Option 2: PDF to Images</h3>
+            <p style="color: #666; margin-bottom: 20px;">Convert each PDF page to a downloadable image</p>
+
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">1</span>
+                    Select Mode
+                </div>
+                <div class="step-content">
+                    Click on the <strong>"🖼️ PDF to Images"</strong> radio button to activate conversion mode.
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">2</span>
+                    Upload a Single PDF
+                </div>
+                <div class="step-content">
+                    Click the upload area or drag & drop a single PDF file to convert.
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">3</span>
+                    Convert
+                </div>
+                <div class="step-content">
+                    Click the <span class="button-example">Convert to Images</span> button. The app will process each page.
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">4</span>
+                    Download Images
+                </div>
+                <div class="step-content">
+                    Once conversion is complete, you'll see preview images. Click "Download" under each image to save it as PNG.
+                </div>
+            </div>
+
+            <div class="tip">
+                <span class="tip-icon">⚠️</span>
+                <span class="tip-content"><strong>Important:</strong> When you switch between modes, any previously selected files will be cleared automatically.</span>
+            </div>
+        </div>
+
+        <!-- WATERMARK INSERTER SECTION -->
+        <h2><span class="icon">💧</span>Watermark Inserter</h2>
+
+        <div class="feature-section">
+            <p style="color: #666; margin-bottom: 20px;">Add professional watermarks to your PDF files and images</p>
+
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">1</span>
+                    Upload Files
+                </div>
+                <div class="step-content">
+                    Click the upload area or drag & drop PDF files or images (JPG, PNG). You can upload multiple files at once.
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">2</span>
+                    Choose Watermark Style
+                </div>
+                <div class="step-content">
+                    Select one of three available watermark styles:
+                </div>
+            </div>
+
+            <div class="watermark-styles">
+                <div class="style-card">
+                    <h4>📍 Corner Placement</h4>
+                    <p>Watermark placed in the bottom-right corner - subtle and professional</p>
+                </div>
+                <div class="style-card">
+                    <h4>🎯 Center Placement</h4>
+                    <p>Large watermark in the center with transparency - maximum visibility</p>
+                </div>
+                <div class="style-card">
+                    <h4>🔄 Diagonal Pattern</h4>
+                    <p>Watermark repeated diagonally across the page - comprehensive protection</p>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">3</span>
+                    Adjust Opacity
+                </div>
+                <div class="step-content">
+                    Use the opacity slider to control watermark transparency (10% - 100%). Watch the <strong>Live Preview</strong> update in real-time!
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">4</span>
+                    Preview Your Settings
+                </div>
+                <div class="step-content">
+                    Check the <strong>Live Preview</strong> canvas to see exactly how your watermark will appear on documents. The preview updates instantly when you change the style or opacity.
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">5</span>
+                    Apply Watermark
+                </div>
+                <div class="step-content">
+                    Click the <span class="button-example">Apply Watermark</span> button. Each file will be processed and downloaded with "_watermarked" added to the filename.
+                </div>
+            </div>
+
+            <div class="tip">
+                <span class="tip-icon">✨</span>
+                <span class="tip-content"><strong>Pro Tip:</strong> The Live Preview feature lets you experiment with different styles and opacity levels before applying the watermark to your actual files!</span>
+            </div>
+        </div>
+
+        <!-- KEY FEATURES -->
+        <h2><span class="icon">⭐</span>Key Features</h2>
+
+        <div class="feature-box">
+            <div class="feature-title">🔒 100% Privacy</div>
+            <div class="feature-desc">All file processing happens entirely in your browser. No files are ever uploaded to any server. Your documents stay private and secure.</div>
+        </div>
+
+        <div class="feature-box">
+            <div class="feature-title">⚡ Client-Side Processing</div>
+            <div class="feature-desc">No internet connection required after the page loads. Process files offline with fast, browser-based technology.</div>
+        </div>
+
+        <div class="feature-box">
+            <div class="feature-title">📦 No Size Limits</div>
+            <div class="feature-desc">Process PDFs of any size. The only limit is your device's available memory.</div>
+        </div>
+
+        <div class="feature-box">
+            <div class="feature-title">🎨 Live Preview</div>
+            <div class="feature-desc">See watermark changes in real-time before applying them to your files.</div>
+        </div>
+
+        <div class="feature-box">
+            <div class="feature-title">🔄 Drag & Drop Reordering</div>
+            <div class="feature-desc">Easily reorder PDF files by dragging and dropping them in the file list.</div>
+        </div>
+
+        <!-- TROUBLESHOOTING -->
+        <h2><span class="icon">🔧</span>Troubleshooting</h2>
+
+        <div class="feature-section">
+            <h3>Common Issues</h3>
+
+            <div class="step">
+                <div class="step-title">Button says "Merge PDFs" but I selected "PDF to Images"</div>
+                <div class="step-content">
+                    This has been fixed! The app now properly detects mode changes. If you still see this, try refreshing the page.
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-title">Files won't upload</div>
+                <div class="step-content">
+                    Make sure you're uploading the correct file types:
+                    <ul>
+                        <li>PDF Tools: Only PDF files (.pdf)</li>
+                        <li>Watermark Inserter: PDF files and images (.jpg, .jpeg, .png)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-title">Browser freezes with large files</div>
+                <div class="step-content">
+                    Very large PDFs may take time to process. Wait for the progress bar to complete. If your browser crashes, try processing fewer or smaller files at once.
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-title">Watermark preview doesn't show</div>
+                <div class="step-content">
+                    The preview loads the watermark image from GitHub. Ensure you have an internet connection when first loading the page.
+                </div>
+            </div>
+        </div>
+
+        <!-- SUPPORTED BROWSERS -->
+        <h2><span class="icon">🌐</span>Supported Browsers</h2>
+        <div class="feature-section">
+            <p style="color: #666;">CLMC TOOLS works best on modern browsers:</p>
+            <ul>
+                <li>Google Chrome (recommended)</li>
+                <li>Microsoft Edge</li>
+                <li>Mozilla Firefox</li>
+                <li>Safari (macOS/iOS)</li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            <p><strong>CLMC TOOLS</strong></p>
+            <p>Powered by pdf-lib & PDF.js</p>
+            <p>Client-side processing • No data collected</p>
+        </div>
+    </div>
+</body>
+</html>
