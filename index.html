@@ -1329,10 +1329,11 @@
 
             for (const page of pages) {
                 const { width, height } = page.getSize();
-                const watermarkWidth = 150;
-                const watermarkHeight = (watermarkImage.height / watermarkImage.width) * watermarkWidth;
+                let watermarkWidth, watermarkHeight;
 
                 if (style === 'corner') {
+                    watermarkWidth = 150;
+                    watermarkHeight = (watermarkImage.height / watermarkImage.width) * watermarkWidth;
                     page.drawImage(watermarkImage, {
                         x: width - watermarkWidth - 20,
                         y: 20,
@@ -1341,6 +1342,8 @@
                         opacity: opacityValue
                     });
                 } else if (style === 'center') {
+                    watermarkWidth = width * 0.6;
+                    watermarkHeight = (watermarkImage.height / watermarkImage.width) * watermarkWidth;
                     page.drawImage(watermarkImage, {
                         x: (width - watermarkWidth) / 2,
                         y: (height - watermarkHeight) / 2,
@@ -1349,6 +1352,8 @@
                         opacity: opacityValue * 0.5
                     });
                 } else if (style === 'diagonal') {
+                    watermarkWidth = 150;
+                    watermarkHeight = (watermarkImage.height / watermarkImage.width) * watermarkWidth;
                     const spacing = 250;
                     for (let x = -watermarkWidth; x < width + watermarkWidth; x += spacing) {
                         for (let y = -watermarkHeight; y < height + watermarkHeight; y += spacing) {
@@ -1381,18 +1386,22 @@
 
                         ctx.drawImage(img, 0, 0);
 
-                        const watermarkWidth = 200;
-                        const watermarkHeight = (watermarkImg.height / watermarkImg.width) * watermarkWidth;
+                        let watermarkWidth, watermarkHeight;
                         const opacityValue = opacity / 100;
 
-                        ctx.globalAlpha = opacityValue;
-
                         if (style === 'corner') {
+                            watermarkWidth = 200;
+                            watermarkHeight = (watermarkImg.height / watermarkImg.width) * watermarkWidth;
+                            ctx.globalAlpha = opacityValue;
                             ctx.drawImage(watermarkImg, canvas.width - watermarkWidth - 20, canvas.height - watermarkHeight - 20, watermarkWidth, watermarkHeight);
                         } else if (style === 'center') {
+                            watermarkWidth = canvas.width * 0.6;
+                            watermarkHeight = (watermarkImg.height / watermarkImg.width) * watermarkWidth;
                             ctx.globalAlpha = opacityValue * 0.5;
                             ctx.drawImage(watermarkImg, (canvas.width - watermarkWidth) / 2, (canvas.height - watermarkHeight) / 2, watermarkWidth, watermarkHeight);
                         } else if (style === 'diagonal') {
+                            watermarkWidth = 200;
+                            watermarkHeight = (watermarkImg.height / watermarkImg.width) * watermarkWidth;
                             ctx.globalAlpha = opacityValue * 0.3;
                             const spacing = 300;
                             ctx.save();
