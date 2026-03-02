@@ -14,8 +14,8 @@ Requirements for this milestone — Split PDF and Compress PDF features.
 - [ ] **SPLT-03**: User can click individual page thumbnails to select/deselect them for extraction
 - [ ] **SPLT-04**: User can type a page range string (e.g. "1-3, 5, 7-9") to select pages
 - [ ] **SPLT-05**: User can click "Extract Every Page" to split all pages into individual files in one action
-- [ ] **SPLT-06**: User can download all split files as a single ZIP archive
-- [ ] **SPLT-07**: App detects encrypted PDFs and shows a clear error before attempting to process
+- [x] **SPLT-06**: User can download all split files as a single ZIP archive
+- [x] **SPLT-07**: App detects encrypted PDFs and shows a clear error before attempting to process
 - [ ] **SPLT-08**: App shows progress indicator during split and ZIP generation
 
 ### Compress PDF
@@ -75,8 +75,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SPLT-03 | Phase 1 - Split PDF | Pending |
 | SPLT-04 | Phase 1 - Split PDF | Pending |
 | SPLT-05 | Phase 1 - Split PDF | Pending |
-| SPLT-06 | Phase 1 - Split PDF | Pending |
-| SPLT-07 | Phase 1 - Split PDF | Pending |
+| SPLT-06 | Phase 1 - Split PDF | Complete |
+| SPLT-07 | Phase 1 - Split PDF | Complete |
 | SPLT-08 | Phase 1 - Split PDF | Pending |
 | COMP-01 | Phase 2 - Compress PDF | Pending |
 | COMP-02 | Phase 2 - Compress PDF | Pending |
