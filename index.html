@@ -1305,6 +1305,164 @@
             hideStatus('statusSplit');
         }
 
+        async function loadSplitPdfThumbnails() {
+            const THUMB_WIDTH = 120; // px — target thumbnail width; keep small for performance
+
+            // Reset prior state
+            clearSplitTool();
+            splitPdfFile = fileInputSplit.files[0] || splitPdfFile; // reattach after clear resets
+
+            if (!splitPdfFile) return;
+
+            // File size gate — must check before reading (SPLT concern from STATE.md)
+            const fileSizeMB = splitPdfFile.size / (1024 * 1024);
+            if (fileSizeMB > 80) {
+                showStatus('❌ File too large (max 80 MB). Please use a smaller PDF.', 'error', 'statusSplit');
+                splitPdfFile = null;
+                return;
+            }
+
+            showStatus('<div class="spinner"></div> Loading PDF...', 'loading', 'statusSplit');
+            updateProgress(0, 'progressBarSplit', 'progressFillSplit');
+
+            try {
+                const arrayBuffer = await splitPdfFile.arrayBuffer();
+
+                // SPLT-07: Encrypted PDF detection — before PDFDocument.load()
+                if (isEncryptedPdf(arrayBuffer)) {
+                    hideProgress('progressBarSplit', 'progressFillSplit');
+                    showStatus('❌ This PDF is encrypted and cannot be split. Please use an unencrypted PDF.', 'error', 'statusSplit');
+                    splitPdfFile = null;
+                    return;
+                }
+
+                if (fileSizeMB > 30) {
+                    showStatus('⚠️ Large file — processing may take a moment.', 'loading', 'statusSplit');
+                }
+
+                // Load with pdf-lib for later use in splitPdf()
+                // Safety net: catch load error in case isEncryptedPdf missed an edge case
+                try {
+                    splitPdfDoc = await PDFDocument.load(arrayBuffer);
+                } catch (loadErr) {
+                    hideProgress('progressBarSplit', 'progressFillSplit');
+                    showStatus('❌ Could not load this PDF. It may be encrypted or corrupted.', 'error', 'statusSplit');
+                    splitPdfFile = null;
+                    return;
+                }
+
+                // Load with PDF.js for thumbnail rendering
+                const pdfJs = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                splitNumPages = pdfJs.numPages;
+
+                // Show file info bar
+                splitFileInfoEl.textContent = `${escapeHtml(splitPdfFile.name)} — ${splitNumPages} page${splitNumPages !== 1 ? 's' : ''} (${fileSizeMB.toFixed(1)} MB)`;
+                splitFileInfoEl.style.display = 'block';
+
+                showStatus('<div class="spinner"></div> Rendering thumbnails...', 'loading', 'statusSplit');
+                splitThumbnails = [];
+
+                for (let pageNum = 1; pageNum <= splitNumPages; pageNum++) {
+                    const page = await pdfJs.getPage(pageNum);
+                    const baseViewport = page.getViewport({ scale: 1 });
+                    const scale = THUMB_WIDTH / baseViewport.width;
+                    const viewport = page.getViewport({ scale });
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+                    await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+
+                    // Use toDataURL for img src — cannot pass canvas through innerHTML
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                    splitThumbnails.push({ pageNum, dataUrl, width: viewport.width, height: viewport.height });
+
+                    // SPLT-08: Progress — first 50% is thumbnail rendering
+                    updateProgress((pageNum / splitNumPages) * 50, 'progressBarSplit', 'progressFillSplit');
+                }
+
+                renderSplitThumbnailGrid();
+                splitPageRangeGroup.style.display = 'block';
+                splitActions.style.display = 'flex';
+                hideProgress('progressBarSplit', 'progressFillSplit');
+                hideStatus('statusSplit');
+
+            } catch (error) {
+                hideProgress('progressBarSplit', 'progressFillSplit');
+                showStatus(`❌ Error loading PDF: ${error.message}`, 'error', 'statusSplit');
+                console.error('Split PDF load error:', error);
+                splitPdfFile = null;
+            }
+        }
+
+        function renderSplitThumbnailGrid() {
+            // Rebuilds the thumbnail grid HTML reflecting current splitSelectedPages state
+            thumbnailGridSplit.innerHTML = splitThumbnails.map(thumb => {
+                const isSelected = splitSelectedPages.has(thumb.pageNum - 1);
+                return `<div class="split-thumb-card ${isSelected ? 'selected' : ''}"
+                             data-page-index="${thumb.pageNum - 1}"
+                             onclick="toggleSplitPage(${thumb.pageNum - 1})">
+                    <img src="${thumb.dataUrl}" width="${thumb.width}" height="${thumb.height}" alt="Page ${thumb.pageNum}" />
+                    <div class="split-thumb-label">Page ${thumb.pageNum}</div>
+                    <div class="split-thumb-check">✓</div>
+                </div>`;
+            }).join('');
+            thumbnailGridSplit.style.display = 'grid';
+            updateSplitSelectionSummary();
+        }
+
+        function toggleSplitPage(pageIndex) {
+            // pageIndex: 0-based
+            if (splitSelectedPages.has(pageIndex)) {
+                splitSelectedPages.delete(pageIndex);
+            } else {
+                splitSelectedPages.add(pageIndex);
+            }
+            // Sync: re-render grid to show new selection state
+            renderSplitThumbnailGrid();
+            // Sync: update range text input to reflect current selection
+            updateRangeInputFromSelection();
+            // Enable/disable extract selected button
+            extractSelectedBtnSplit.disabled = splitSelectedPages.size === 0;
+        }
+
+        function updateRangeInputFromSelection() {
+            // Converts the splitSelectedPages Set into a human-readable range string for the text input
+            // e.g. {0, 1, 2, 4} → "1-3, 5"
+            if (splitSelectedPages.size === 0) {
+                splitPageRangeInput.value = '';
+                return;
+            }
+            const sorted = Array.from(splitSelectedPages).sort((a, b) => a - b);
+            const parts = [];
+            let rangeStart = sorted[0];
+            let rangeEnd = sorted[0];
+
+            for (let i = 1; i < sorted.length; i++) {
+                if (sorted[i] === rangeEnd + 1) {
+                    rangeEnd = sorted[i];
+                } else {
+                    parts.push(rangeStart === rangeEnd ? `${rangeStart + 1}` : `${rangeStart + 1}-${rangeEnd + 1}`);
+                    rangeStart = sorted[i];
+                    rangeEnd = sorted[i];
+                }
+            }
+            parts.push(rangeStart === rangeEnd ? `${rangeStart + 1}` : `${rangeStart + 1}-${rangeEnd + 1}`);
+            splitPageRangeInput.value = parts.join(', ');
+        }
+
+        function updateSplitSelectionSummary() {
+            if (splitSelectedPages.size === 0) {
+                splitSelectionSummary.textContent = 'No pages selected — "Extract Every Page" will split all pages individually.';
+            } else {
+                splitSelectionSummary.textContent = `${splitSelectedPages.size} page${splitSelectedPages.size !== 1 ? 's' : ''} selected.`;
+            }
+            splitSelectionSummary.style.display = 'block';
+        }
+
+        // Expose toggleSplitPage globally — called from onclick= attribute in thumbnail card HTML
+        window.toggleSplitPage = toggleSplitPage;
+
         function attachPdfDragListeners() {
             const items = fileListPdf.querySelectorAll('.file-item');
 
