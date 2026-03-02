@@ -9,14 +9,14 @@ Requirements for this milestone — Split PDF and Compress PDF features.
 
 ### Split PDF
 
-- [ ] **SPLT-01**: User can upload one or more PDF files to the Split tool via click or drag-and-drop
-- [ ] **SPLT-02**: User can see a thumbnail grid of all pages in the uploaded PDF
-- [ ] **SPLT-03**: User can click individual page thumbnails to select/deselect them for extraction
+- [x] **SPLT-01**: User can upload one or more PDF files to the Split tool via click or drag-and-drop
+- [x] **SPLT-02**: User can see a thumbnail grid of all pages in the uploaded PDF
+- [x] **SPLT-03**: User can click individual page thumbnails to select/deselect them for extraction
 - [ ] **SPLT-04**: User can type a page range string (e.g. "1-3, 5, 7-9") to select pages
 - [ ] **SPLT-05**: User can click "Extract Every Page" to split all pages into individual files in one action
 - [x] **SPLT-06**: User can download all split files as a single ZIP archive
 - [x] **SPLT-07**: App detects encrypted PDFs and shows a clear error before attempting to process
-- [ ] **SPLT-08**: App shows progress indicator during split and ZIP generation
+- [x] **SPLT-08**: App shows progress indicator during split and ZIP generation
 
 ### Compress PDF
 
@@ -70,14 +70,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SPLT-01 | Phase 1 - Split PDF | Pending |
-| SPLT-02 | Phase 1 - Split PDF | Pending |
-| SPLT-03 | Phase 1 - Split PDF | Pending |
+| SPLT-01 | Phase 1 - Split PDF | Complete |
+| SPLT-02 | Phase 1 - Split PDF | Complete |
+| SPLT-03 | Phase 1 - Split PDF | Complete |
 | SPLT-04 | Phase 1 - Split PDF | Pending |
 | SPLT-05 | Phase 1 - Split PDF | Pending |
 | SPLT-06 | Phase 1 - Split PDF | Complete |
 | SPLT-07 | Phase 1 - Split PDF | Complete |
-| SPLT-08 | Phase 1 - Split PDF | Pending |
+| SPLT-08 | Phase 1 - Split PDF | Complete |
 | COMP-01 | Phase 2 - Compress PDF | Pending |
 | COMP-02 | Phase 2 - Compress PDF | Pending |
 | COMP-03 | Phase 2 - Compress PDF | Pending |
@@ -94,4 +94,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-03-02*
-*Last updated: 2026-03-02 after roadmap creation*
+*Last updated: 2026-03-02 after plan 01-split-pdf/02 completion*

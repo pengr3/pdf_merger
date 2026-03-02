@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: unknown
-last_updated: "2026-03-02T10:30:32.543Z"
+status: in_progress
+last_updated: "2026-03-02T10:33:44Z"
 progress:
-  total_phases: 1
+  total_phases: 2
   completed_phases: 0
-  total_plans: 3
-  completed_plans: 1
+  total_plans: 6
+  completed_plans: 2
 ---
 
 # Project State
@@ -23,28 +23,28 @@ See: .planning/PROJECT.md (updated 2026-03-02)
 ## Current Position
 
 Phase: 1 of 2 (Split PDF)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-03-02 — Completed plan 01 (Split PDF foundation)
+Last activity: 2026-03-02 — Completed plan 02 (Upload handler + thumbnail pipeline)
 
-Progress: [█░░░░░░░░░] 10%
+Progress: [██░░░░░░░░] 20%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
+- Total plans completed: 2
 - Average duration: 2min
-- Total execution time: 2min
+- Total execution time: 4min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-split-pdf | 1 | 2min | 2min |
+| 01-split-pdf | 2 | 4min | 2min |
 
 **Recent Trend:**
-- Last 5 plans: 01-split-pdf/01 (2min)
-- Trend: Baseline established
+- Last 5 plans: 01-split-pdf/01 (2min), 01-split-pdf/02 (2min)
+- Trend: Consistent 2min per plan
 
 *Updated after each plan completion*
 
@@ -60,6 +60,9 @@ Recent decisions affecting current work:
 - Roadmap: PDF-to-PPTX and PPTX-to-PDF deferred to v2 — out of scope for this milestone
 - Architecture: Never use `ignoreEncryption: true` — detect `/Encrypt` in first 2 KB and reject with user message
 - [Phase 01-split-pdf]: Use JSZip for all ZIP downloads even for single file to avoid popup-blocker
+- [Phase 01-split-pdf/02]: clearSplitTool() called at top of loadSplitPdfThumbnails(); splitPdfFile reattached from fileInputSplit.files[0] after clear
+- [Phase 01-split-pdf/02]: Progress bar 0-50% for thumbnail render, 50-100% reserved for Plan 03 split operation
+- [Phase 01-split-pdf/02]: renderSplitThumbnailGrid() uses full innerHTML rebuild on each toggle — safe for expected page counts
 
 ### Pending Todos
 
@@ -67,12 +70,12 @@ None yet.
 
 ### Blockers/Concerns
 
-- Phase 1: Add 80 MB file size gate (warn at 30 MB, block at 80 MB) — prevents tab OOM crash on large PDFs
+- Phase 1: 80 MB size gate RESOLVED — implemented in Plan 02 (warn at 30 MB, block at 80 MB)
 - Phase 2: Compression is a no-op for text-heavy PDFs — must always show before/after size and display "could not reduce size further" when output is not smaller
 - Phase 2: Heavy mode destroys text layer — must warn user before upload, not after
 
 ## Session Continuity
 
-Last session: 2026-03-02T10:29:08Z
-Stopped at: Completed 01-split-pdf-01-PLAN.md
+Last session: 2026-03-02T10:33:44Z
+Stopped at: Completed 01-split-pdf-02-PLAN.md
 Resume file: None
