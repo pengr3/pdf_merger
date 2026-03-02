@@ -1463,6 +1463,128 @@
         // Expose toggleSplitPage globally — called from onclick= attribute in thumbnail card HTML
         window.toggleSplitPage = toggleSplitPage;
 
+        // --- Page range Apply button ---
+        splitApplyRangeBtn.addEventListener('click', applyRangeSelection);
+        splitPageRangeInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') applyRangeSelection();
+        });
+
+        function applyRangeSelection() {
+            const raw = splitPageRangeInput.value.trim();
+
+            if (!raw) {
+                // Empty input = clear selection (user wants to use thumbnail clicks or Extract All)
+                splitSelectedPages = new Set();
+                splitRangeError.style.display = 'none';
+                extractSelectedBtnSplit.disabled = true;
+                renderSplitThumbnailGrid();
+                return;
+            }
+
+            const parsed = parsePageRange(raw, splitNumPages);
+
+            if (parsed === null) {
+                splitRangeError.textContent = `Invalid range. Use numbers 1–${splitNumPages} with commas or hyphens (e.g. "1-3, 5").`;
+                splitRangeError.style.display = 'block';
+                return;
+            }
+
+            splitRangeError.style.display = 'none';
+            splitSelectedPages = new Set(parsed); // parsed is already 0-based
+            extractSelectedBtnSplit.disabled = splitSelectedPages.size === 0;
+            // Re-render grid to show new selection state
+            renderSplitThumbnailGrid();
+            // Normalize the input to consistent format (e.g. "1-3,5" → "1-3, 5")
+            updateRangeInputFromSelection();
+        }
+
+        // --- splitPdf() orchestrator ---
+        // mode: 'all' → extract every page as individual PDF (SPLT-05)
+        // mode: 'selected' → extract selected pages as one grouped PDF (custom selection)
+        async function splitPdf(mode) {
+            if (!splitPdfDoc || !splitPdfFile) return;
+
+            const startTime = Date.now();
+            extractAllBtnSplit.disabled = true;
+            extractSelectedBtnSplit.disabled = true;
+            clearBtnSplit.disabled = true;
+            showStatus('<div class="spinner"></div> Splitting PDF...', 'loading', 'statusSplit');
+            updateProgress(0, 'progressBarSplit', 'progressFillSplit');
+
+            try {
+                const baseName = splitPdfFile.name.replace(/\.pdf$/i, '');
+
+                if (mode === 'all') {
+                    // Extract every page as a separate PDF — SPLT-05
+                    const totalPages = splitPdfDoc.getPageCount();
+                    const files = [];
+
+                    for (let i = 0; i < totalPages; i++) {
+                        // Process sequentially — release reference after adding to files array
+                        // Avoids holding all Uint8Arrays in memory simultaneously (large PDF OOM concern)
+                        const outBytes = await extractPagesToPdf(splitPdfDoc, [i]);
+                        files.push({ name: `${baseName}-page-${i + 1}.pdf`, data: outBytes });
+
+                        // Progress: 0–95% for extraction phase
+                        updateProgress(((i + 1) / totalPages) * 95, 'progressBarSplit', 'progressFillSplit');
+                    }
+
+                    showStatus('<div class="spinner"></div> Creating ZIP...', 'loading', 'statusSplit');
+                    updateProgress(96, 'progressBarSplit', 'progressFillSplit');
+
+                    await downloadAsZip(files, `${baseName}-all-pages.zip`);
+                    updateProgress(100, 'progressBarSplit', 'progressFillSplit');
+
+                    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+                    showStatus(`✅ Extracted all ${totalPages} pages as individual PDFs — ZIP download started (${elapsed}s).`, 'success', 'statusSplit');
+
+                } else {
+                    // mode === 'selected' — extract selected pages as one grouped PDF
+                    if (splitSelectedPages.size === 0) {
+                        showStatus('❌ No pages selected. Click page thumbnails or use the range input to select pages.', 'error', 'statusSplit');
+                        return;
+                    }
+
+                    const indices = Array.from(splitSelectedPages).sort((a, b) => a - b);
+                    showStatus('<div class="spinner"></div> Extracting selected pages...', 'loading', 'statusSplit');
+                    updateProgress(50, 'progressBarSplit', 'progressFillSplit');
+
+                    const outBytes = await extractPagesToPdf(splitPdfDoc, indices);
+                    updateProgress(90, 'progressBarSplit', 'progressFillSplit');
+
+                    showStatus('<div class="spinner"></div> Creating ZIP...', 'loading', 'statusSplit');
+                    updateProgress(96, 'progressBarSplit', 'progressFillSplit');
+
+                    const pageLabel = indices.length === 1
+                        ? `page-${indices[0] + 1}`
+                        : `pages-${indices[0] + 1}-to-${indices[indices.length - 1] + 1}`;
+                    await downloadAsZip(
+                        [{ name: `${baseName}-${pageLabel}.pdf`, data: outBytes }],
+                        `${baseName}-selected.zip`
+                    );
+                    updateProgress(100, 'progressBarSplit', 'progressFillSplit');
+
+                    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+                    showStatus(`✅ Extracted ${indices.length} page${indices.length !== 1 ? 's' : ''} — ZIP download started (${elapsed}s).`, 'success', 'statusSplit');
+                }
+
+                setTimeout(() => hideProgress('progressBarSplit', 'progressFillSplit'), 1500);
+
+            } catch (error) {
+                hideProgress('progressBarSplit', 'progressFillSplit');
+                showStatus(`❌ Error: ${error.message}`, 'error', 'statusSplit');
+                console.error('Split PDF error:', error);
+            } finally {
+                extractAllBtnSplit.disabled = false;
+                extractSelectedBtnSplit.disabled = splitSelectedPages.size === 0;
+                clearBtnSplit.disabled = false;
+            }
+        }
+
+        // --- Extract button event listeners ---
+        extractAllBtnSplit.addEventListener('click', () => splitPdf('all'));
+        extractSelectedBtnSplit.addEventListener('click', () => splitPdf('selected'));
+
         function attachPdfDragListeners() {
             const items = fileListPdf.querySelectorAll('.file-item');
 
@@ -2079,7 +2201,7 @@
 
         // Prevent accidental page navigation
         window.addEventListener('beforeunload', (e) => {
-            if (selectedPdfFiles.length > 0 || watermarkFiles.length > 0) {
+            if (selectedPdfFiles.length > 0 || watermarkFiles.length > 0 || splitPdfFile !== null) {
                 e.preventDefault();
                 e.returnValue = '';
             }
