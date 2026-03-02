@@ -70,22 +70,22 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SPLT-01 | Phase 1 | Pending |
-| SPLT-02 | Phase 1 | Pending |
-| SPLT-03 | Phase 1 | Pending |
-| SPLT-04 | Phase 1 | Pending |
-| SPLT-05 | Phase 1 | Pending |
-| SPLT-06 | Phase 1 | Pending |
-| SPLT-07 | Phase 1 | Pending |
-| SPLT-08 | Phase 1 | Pending |
-| COMP-01 | Phase 2 | Pending |
-| COMP-02 | Phase 2 | Pending |
-| COMP-03 | Phase 2 | Pending |
-| COMP-04 | Phase 2 | Pending |
-| COMP-05 | Phase 2 | Pending |
-| COMP-06 | Phase 2 | Pending |
-| COMP-07 | Phase 2 | Pending |
-| COMP-08 | Phase 2 | Pending |
+| SPLT-01 | Phase 1 - Split PDF | Pending |
+| SPLT-02 | Phase 1 - Split PDF | Pending |
+| SPLT-03 | Phase 1 - Split PDF | Pending |
+| SPLT-04 | Phase 1 - Split PDF | Pending |
+| SPLT-05 | Phase 1 - Split PDF | Pending |
+| SPLT-06 | Phase 1 - Split PDF | Pending |
+| SPLT-07 | Phase 1 - Split PDF | Pending |
+| SPLT-08 | Phase 1 - Split PDF | Pending |
+| COMP-01 | Phase 2 - Compress PDF | Pending |
+| COMP-02 | Phase 2 - Compress PDF | Pending |
+| COMP-03 | Phase 2 - Compress PDF | Pending |
+| COMP-04 | Phase 2 - Compress PDF | Pending |
+| COMP-05 | Phase 2 - Compress PDF | Pending |
+| COMP-06 | Phase 2 - Compress PDF | Pending |
+| COMP-07 | Phase 2 - Compress PDF | Pending |
+| COMP-08 | Phase 2 - Compress PDF | Pending |
 
 **Coverage:**
 - v1 requirements: 16 total
@@ -94,4 +94,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-03-02*
-*Last updated: 2026-03-02 after initial definition*
+*Last updated: 2026-03-02 after roadmap creation*
