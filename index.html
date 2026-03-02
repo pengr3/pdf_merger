@@ -1225,6 +1225,86 @@
             document.body.removeChild(a);
         }
 
+        // ========== SPLIT PDF SECTION ==========
+
+        // --- State ---
+        let splitPdfFile = null;       // The File object from the upload input
+        let splitPdfDoc = null;        // PDFDocument (pdf-lib) loaded from splitPdfFile — used by splitPdf()
+        let splitNumPages = 0;         // Total page count of the loaded PDF
+        let splitSelectedPages = new Set(); // Set of 0-based page indices selected for extraction
+        let splitThumbnails = [];      // [{pageNum, dataUrl, width, height}] — rendered thumbnails
+
+        // --- DOM references ---
+        const uploadAreaSplit = document.getElementById('uploadAreaSplit');
+        const fileInputSplit = document.getElementById('fileInputSplit');
+        const splitFileInfoEl = document.getElementById('splitFileInfo');
+        const splitPageRangeGroup = document.getElementById('splitPageRangeGroup');
+        const splitPageRangeInput = document.getElementById('splitPageRange');
+        const splitApplyRangeBtn = document.getElementById('splitApplyRangeBtn');
+        const splitRangeError = document.getElementById('splitRangeError');
+        const thumbnailGridSplit = document.getElementById('thumbnailGridSplit');
+        const splitSelectionSummary = document.getElementById('splitSelectionSummary');
+        const splitActions = document.getElementById('splitActions');
+        const clearBtnSplit = document.getElementById('clearBtnSplit');
+        const extractSelectedBtnSplit = document.getElementById('extractSelectedBtnSplit');
+        const extractAllBtnSplit = document.getElementById('extractAllBtnSplit');
+
+        // --- Upload area handlers ---
+        uploadAreaSplit.addEventListener('click', () => fileInputSplit.click());
+
+        uploadAreaSplit.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadAreaSplit.classList.add('dragover');
+        });
+
+        uploadAreaSplit.addEventListener('dragleave', () => {
+            uploadAreaSplit.classList.remove('dragover');
+        });
+
+        uploadAreaSplit.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadAreaSplit.classList.remove('dragover');
+            const files = Array.from(e.dataTransfer.files).filter(f =>
+                f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')
+            );
+            if (files.length === 0) {
+                showStatus('Please drop a PDF file.', 'error', 'statusSplit');
+                return;
+            }
+            splitPdfFile = files[0];
+            loadSplitPdfThumbnails();
+        });
+
+        fileInputSplit.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                splitPdfFile = e.target.files[0];
+                loadSplitPdfThumbnails();
+            }
+        });
+
+        // --- Clear button ---
+        clearBtnSplit.addEventListener('click', clearSplitTool);
+
+        function clearSplitTool() {
+            splitPdfFile = null;
+            splitPdfDoc = null;
+            splitNumPages = 0;
+            splitSelectedPages = new Set();
+            splitThumbnails = [];
+            fileInputSplit.value = '';
+            splitFileInfoEl.style.display = 'none';
+            splitPageRangeGroup.style.display = 'none';
+            splitPageRangeInput.value = '';
+            splitRangeError.style.display = 'none';
+            thumbnailGridSplit.style.display = 'none';
+            thumbnailGridSplit.innerHTML = '';
+            splitSelectionSummary.style.display = 'none';
+            splitActions.style.display = 'none';
+            extractSelectedBtnSplit.disabled = true;
+            hideProgress('progressBarSplit', 'progressFillSplit');
+            hideStatus('statusSplit');
+        }
+
         function attachPdfDragListeners() {
             const items = fileListPdf.querySelectorAll('.file-item');
 
