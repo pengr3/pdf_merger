@@ -1163,6 +1163,68 @@
             return div.innerHTML;
         }
 
+        // ========== SPLIT PDF UTILITIES ==========
+
+        function isEncryptedPdf(arrayBuffer) {
+            // Scan first 2 KB for /Encrypt key — faster and clearer error message than catching pdf-lib load error
+            // Note: wrap PDFDocument.load() in try/catch as safety net for edge cases (see splitPdf())
+            const header = new TextDecoder().decode(arrayBuffer.slice(0, 2048));
+            return header.includes('/Encrypt');
+        }
+
+        function parsePageRange(rangeStr, pageCount) {
+            // Converts "1-3, 5, 7-9" → [0, 1, 2, 4, 6, 7, 8] (sorted 0-based indices)
+            // Returns null if any token is invalid or out of bounds
+            const indices = new Set();
+            const parts = rangeStr.split(/[\s,]+/);
+
+            for (const part of parts) {
+                if (!part) continue;
+                const match = part.match(/^(\d+)(?:-(\d+))?$/);
+                if (!match) return null; // invalid token
+
+                const start = parseInt(match[1], 10);
+                const end = match[2] ? parseInt(match[2], 10) : start;
+
+                if (start < 1 || end > pageCount || start > end) return null; // out of bounds or inverted
+
+                for (let i = start; i <= end; i++) {
+                    indices.add(i - 1); // convert to 0-based
+                }
+            }
+
+            if (indices.size === 0) return null;
+            return Array.from(indices).sort((a, b) => a - b);
+        }
+
+        async function extractPagesToPdf(srcDoc, indices) {
+            // Copies the specified 0-based page indices from srcDoc into a new PDFDocument
+            // indices: number[] — 0-based page indices from the source document
+            const outDoc = await PDFDocument.create();
+            const pages = await outDoc.copyPages(srcDoc, indices);
+            pages.forEach(page => outDoc.addPage(page));
+            return await outDoc.save(); // returns Uint8Array
+        }
+
+        async function downloadAsZip(files, zipName) {
+            // files: [{name: string, data: Uint8Array}]
+            // zipName: string — filename for the downloaded .zip
+            // Always uses JSZip even for 1 file — avoids popup-blocker for consistency
+            const zip = new JSZip();
+            for (const { name, data } of files) {
+                zip.file(name, data);
+            }
+            const blob = await zip.generateAsync({ type: 'blob' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = zipName;
+            document.body.appendChild(a);
+            a.click();
+            URL.revokeObjectURL(url); // prevent memory leak — matches pattern at line 1097
+            document.body.removeChild(a);
+        }
+
         function attachPdfDragListeners() {
             const items = fileListPdf.querySelectorAll('.file-item');
 
