@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in_progress
-last_updated: "2026-03-02T10:33:44Z"
+last_updated: "2026-03-02T10:37:39Z"
 progress:
   total_phases: 2
   completed_phases: 0
@@ -23,9 +23,9 @@ See: .planning/PROJECT.md (updated 2026-03-02)
 ## Current Position
 
 Phase: 1 of 2 (Split PDF)
-Plan: 2 of 3 in current phase
-Status: In progress
-Last activity: 2026-03-02 — Completed plan 02 (Upload handler + thumbnail pipeline)
+Plan: 3 of 3 in current phase
+Status: In progress — paused at checkpoint:human-verify
+Last activity: 2026-03-02 — Completed Plan 03 auto task (splitPdf orchestrator); awaiting human verification
 
 Progress: [██░░░░░░░░] 20%
 
@@ -63,6 +63,8 @@ Recent decisions affecting current work:
 - [Phase 01-split-pdf/02]: clearSplitTool() called at top of loadSplitPdfThumbnails(); splitPdfFile reattached from fileInputSplit.files[0] after clear
 - [Phase 01-split-pdf/02]: Progress bar 0-50% for thumbnail render, 50-100% reserved for Plan 03 split operation
 - [Phase 01-split-pdf/02]: renderSplitThumbnailGrid() uses full innerHTML rebuild on each toggle — safe for expected page counts
+- [Phase 01-split-pdf/03]: splitPdf('selected') produces one grouped PDF (not N individual PDFs) — iLovePDF/Smallpdf convention
+- [Phase 01-split-pdf/03]: Sequential await per page in 'all' mode to avoid holding all N Uint8Arrays in memory simultaneously
 
 ### Pending Todos
 
@@ -76,6 +78,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-02T10:33:44Z
-Stopped at: Completed 01-split-pdf-02-PLAN.md
+Last session: 2026-03-02T10:37:39Z
+Stopped at: 01-split-pdf-03-PLAN.md — checkpoint:human-verify (Task 2 of 2, awaiting approval)
 Resume file: None
