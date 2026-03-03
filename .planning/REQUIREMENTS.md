@@ -12,8 +12,8 @@ Requirements for this milestone — Split PDF and Compress PDF features.
 - [x] **SPLT-01**: User can upload one or more PDF files to the Split tool via click or drag-and-drop
 - [x] **SPLT-02**: User can see a thumbnail grid of all pages in the uploaded PDF
 - [x] **SPLT-03**: User can click individual page thumbnails to select/deselect them for extraction
-- [ ] **SPLT-04**: User can type a page range string (e.g. "1-3, 5, 7-9") to select pages
-- [ ] **SPLT-05**: User can click "Extract Every Page" to split all pages into individual files in one action
+- [x] **SPLT-04**: User can type a page range string (e.g. "1-3, 5, 7-9") to select pages
+- [x] **SPLT-05**: User can click "Extract Every Page" to split all pages into individual files in one action
 - [x] **SPLT-06**: User can download all split files as a single ZIP archive
 - [x] **SPLT-07**: App detects encrypted PDFs and shows a clear error before attempting to process
 - [x] **SPLT-08**: App shows progress indicator during split and ZIP generation
@@ -22,11 +22,11 @@ Requirements for this milestone — Split PDF and Compress PDF features.
 
 - [x] **COMP-01**: User can upload one or more PDF files to the Compress tool via click or drag-and-drop
 - [x] **COMP-02**: User can choose between Fast mode (lossless structural optimization) and Heavy mode (JPEG re-render)
-- [ ] **COMP-03**: User sees before/after file size for each compressed PDF
+- [x] **COMP-03**: User sees before/after file size for each compressed PDF
 - [x] **COMP-04**: In Heavy mode, user can adjust JPEG quality via a slider (50–100%)
 - [x] **COMP-05**: Heavy mode shows a clear warning that text layer will be destroyed (non-selectable)
-- [ ] **COMP-06**: App shows progress indicator during compression
-- [ ] **COMP-07**: User can download each compressed PDF individually
+- [x] **COMP-06**: App shows progress indicator during compression
+- [x] **COMP-07**: User can download each compressed PDF individually
 - [x] **COMP-08**: App detects encrypted PDFs and shows a clear error before attempting to process
 
 ### Nav Tab Separation (Phase 3)
@@ -50,7 +50,7 @@ Requirements for this milestone — Split PDF and Compress PDF features.
 - [x] **SCOMP-01**: Firebase Cloud Function receives PDF via multipart POST, runs Ghostscript with selected preset, returns compressed PDF
 - [x] **SCOMP-02**: Three server-side presets available: Best Quality (/prepress 300DPI), Balanced (/ebook 150DPI), Compressed (/screen 72DPI)
 - [x] **SCOMP-03**: Frontend sends PDF to Cloud Function via fetch/FormData and receives compressed result as downloadable PDF
-- [x] **SCOMP-04**: Privacy disclosure shown when server mode is selected, informing user files are sent to server for processing
+- [x] **SCOMP-04**: ~~Privacy disclosure shown when server mode is selected~~ — Removed by user decision (internal tool, no disclosure needed)
 - [x] **SCOMP-05**: Text remains selectable in server-compressed PDFs (Ghostscript preserves text vectors, only downsamples raster images)
 - [x] **SCOMP-06**: Old Heavy (JPEG Re-render) mode and text-destruction warning fully replaced with Server (Ghostscript) mode in UI
 
@@ -98,18 +98,18 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SPLT-01 | Phase 1 - Split PDF | Complete |
 | SPLT-02 | Phase 1 - Split PDF | Complete |
 | SPLT-03 | Phase 1 - Split PDF | Complete |
-| SPLT-04 | Phase 1 - Split PDF | Pending |
-| SPLT-05 | Phase 1 - Split PDF | Pending |
+| SPLT-04 | Phase 1 - Split PDF | Complete |
+| SPLT-05 | Phase 1 - Split PDF | Complete |
 | SPLT-06 | Phase 1 - Split PDF | Complete |
 | SPLT-07 | Phase 1 - Split PDF | Complete |
 | SPLT-08 | Phase 1 - Split PDF | Complete |
 | COMP-01 | Phase 2 - Compress PDF | Complete |
 | COMP-02 | Phase 2 - Compress PDF | Complete |
-| COMP-03 | Phase 2 - Compress PDF | Pending |
+| COMP-03 | Phase 2 - Compress PDF | Complete |
 | COMP-04 | Phase 2 - Compress PDF | Complete |
 | COMP-05 | Phase 2 - Compress PDF | Complete |
-| COMP-06 | Phase 2 - Compress PDF | Pending |
-| COMP-07 | Phase 2 - Compress PDF | Pending |
+| COMP-06 | Phase 2 - Compress PDF | Complete |
+| COMP-07 | Phase 2 - Compress PDF | Complete |
 | COMP-08 | Phase 2 - Compress PDF | Complete |
 | SCOMP-01 | Phase 02.1 - Server-Side Compression | Complete |
 | SCOMP-02 | Phase 02.1 - Server-Side Compression | Complete |

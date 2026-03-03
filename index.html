@@ -1105,8 +1105,6 @@
                 </div>
             </div>
 
-            <div id="compressPrivacyNotice" class="compress-privacy-notice" style="display:none;"></div>
-
             <div id="compressQualityGroup" class="compress-quality-group" style="display:none;">
                 <label style="font-weight:600; margin-bottom:8px; display:block;">Compression Preset:</label>
                 <div class="compress-preset-group">
@@ -1810,7 +1808,6 @@
         const compressActions = document.getElementById('compressActions');
         const clearBtnCompress = document.getElementById('clearBtnCompress');
         const compressBtnCompress = document.getElementById('compressBtnCompress');
-        const compressPrivacyNotice = document.getElementById('compressPrivacyNotice');
         const compressQualityGroup = document.getElementById('compressQualityGroup');
         let compressPreset = 'balanced';
         const compressResultsList = document.getElementById('compressResultsList');
@@ -1820,7 +1817,6 @@
             radio.addEventListener('change', (e) => {
                 compressMode = e.target.value;
                 const isServer = compressMode === 'server';
-                compressPrivacyNotice.style.display = isServer ? 'block' : 'none';
                 compressQualityGroup.style.display = isServer ? 'block' : 'none';
 
                 // Update selected class on radio-option labels (visual toggle)
@@ -1931,7 +1927,6 @@
             compressResultsList.innerHTML = '';
             compressActions.style.display = 'none';
             compressBtnCompress.disabled = true;
-            compressPrivacyNotice.style.display = 'none';
             compressQualityGroup.style.display = 'none';
             compressPreset = 'balanced';
             const balancedRadio = document.querySelector('input[name="compressPreset"][value="balanced"]');
