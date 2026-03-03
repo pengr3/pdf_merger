@@ -33,10 +33,10 @@ Requirements for this milestone — Split PDF and Compress PDF features.
 
 - [x] **SCOMP-01**: Firebase Cloud Function receives PDF via multipart POST, runs Ghostscript with selected preset, returns compressed PDF
 - [x] **SCOMP-02**: Three server-side presets available: Best Quality (/prepress 300DPI), Balanced (/ebook 150DPI), Compressed (/screen 72DPI)
-- [ ] **SCOMP-03**: Frontend sends PDF to Cloud Function via fetch/FormData and receives compressed result as downloadable PDF
-- [ ] **SCOMP-04**: Privacy disclosure shown when server mode is selected, informing user files are sent to server for processing
+- [x] **SCOMP-03**: Frontend sends PDF to Cloud Function via fetch/FormData and receives compressed result as downloadable PDF
+- [x] **SCOMP-04**: Privacy disclosure shown when server mode is selected, informing user files are sent to server for processing
 - [x] **SCOMP-05**: Text remains selectable in server-compressed PDFs (Ghostscript preserves text vectors, only downsamples raster images)
-- [ ] **SCOMP-06**: Old Heavy (JPEG Re-render) mode and text-destruction warning fully replaced with Server (Ghostscript) mode in UI
+- [x] **SCOMP-06**: Old Heavy (JPEG Re-render) mode and text-destruction warning fully replaced with Server (Ghostscript) mode in UI
 
 ## v2 Requirements
 
@@ -97,10 +97,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | COMP-08 | Phase 2 - Compress PDF | Complete |
 | SCOMP-01 | Phase 02.1 - Server-Side Compression | Complete |
 | SCOMP-02 | Phase 02.1 - Server-Side Compression | Complete |
-| SCOMP-03 | Phase 02.1 - Server-Side Compression | Pending |
-| SCOMP-04 | Phase 02.1 - Server-Side Compression | Pending |
+| SCOMP-03 | Phase 02.1 - Server-Side Compression | Complete |
+| SCOMP-04 | Phase 02.1 - Server-Side Compression | Complete |
 | SCOMP-05 | Phase 02.1 - Server-Side Compression | Complete |
-| SCOMP-06 | Phase 02.1 - Server-Side Compression | Pending |
+| SCOMP-06 | Phase 02.1 - Server-Side Compression | Complete |
 
 **Coverage:**
 - v1 requirements: 22 total (16 original + 6 server-side compression)

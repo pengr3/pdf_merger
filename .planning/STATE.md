@@ -2,6 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
+status: unknown
+last_updated: "2026-03-03T05:15:47.139Z"
+progress:
+  total_phases: 5
+  completed_phases: 2
+  total_plans: 7
+  completed_plans: 6
+---
+
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
 status: in_progress
 last_updated: "2026-03-03T03:35:00Z"
 progress:
@@ -76,6 +89,9 @@ Recent decisions affecting current work:
 - [Phase 02.1-server-side-pdf-compression-via-firebase/01]: Dual-path rawBody: if (req.rawBody) bb.end(req.rawBody); else req.pipe(bb) — handles emulator vs production
 - [Phase 02.1-server-side-pdf-compression-via-firebase/01]: .firebaserc uses YOUR_PROJECT_ID placeholder — user must replace with actual Firebase project ID before deploy
 - [Phase 02.1-server-side-pdf-compression-via-firebase/01]: UUID temp files in /tmp — crypto.randomUUID() prevents concurrent request collisions
+- [Phase 02.1-02]: Size gate at compression time not upload time — allows mode switching after file add
+- [Phase 02.1-02]: No Content-Type header in FormData fetch — browser sets multipart boundary automatically
+- [Phase 02.1-02]: compressPresetValues removed — preset strings sent directly to server, no client-side JPEG quality mapping
 
 ### Pending Todos
 
