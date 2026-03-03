@@ -172,9 +172,10 @@ exports.compressPdf = onRequest(
         '-dAutoFilterGrayImages=false',
         '-dColorImageFilter=/DCTEncode',
         '-dGrayImageFilter=/DCTEncode',
-        `-c`, `.setpdfwrite << /ColorACSImageDict << /QFactor ${presetConfig.qfactor} >> /GrayACSImageDict << /QFactor ${presetConfig.qfactor} >> >> setdistillerparams`,
-        `-f`,
         `-sOutputFile=${outputPath}`,
+        '-c',
+        `<< /ColorACSImageDict << /QFactor ${presetConfig.qfactor} >> /GrayACSImageDict << /QFactor ${presetConfig.qfactor} >> >> setdistillerparams`,
+        '-f',
         inputPath
       ]);
 
