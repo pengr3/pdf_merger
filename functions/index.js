@@ -43,24 +43,25 @@ function isRateLimited(ip) {
   return false;
 }
 
-// Ghostscript preset configurations with custom DPI and downsampling
-// Uses explicit resolution flags instead of just -dPDFSETTINGS for more aggressive compression
+// Ghostscript preset configurations — fully explicit, no -dPDFSETTINGS
+// -dPDFSETTINGS overrides custom DPI flags, so we set ALL parameters manually.
+// QFactor controls JPEG quality: 0.1 = best quality, 1.0 = worst quality
 // Target savings are approximate — actual results depend on PDF content (image vs text ratio)
 const GS_PRESETS = {
   best: {
     // Target: ~30% file size saving — minimal compression, highest quality
-    base: '/ebook',
-    dpi: 175
+    dpi: 200,
+    qfactor: 0.15
   },
   balanced: {
     // Target: ~50% file size saving — good balance
-    base: '/ebook',
-    dpi: 120
+    dpi: 110,
+    qfactor: 0.40
   },
   compressed: {
     // Target: ~90% file size saving — maximum compression
-    base: '/screen',
-    dpi: 36
+    dpi: 36,
+    qfactor: 0.90
   }
 };
 
@@ -140,7 +141,7 @@ exports.compressPdf = onRequest(
       await fs.writeFile(inputPath, pdfBuffer);
 
       // Invoke Ghostscript via child_process.execFile (system binary at /usr/bin/gs)
-      // Uses custom DPI and downsampling flags for more aggressive compression
+      // All parameters set explicitly — do NOT use -dPDFSETTINGS (it overrides custom flags)
       // CRITICAL flags:
       //   -q          : quiet, suppress normal output
       //   -dNOPAUSE   : no interactive pause between pages (required for non-interactive)
@@ -153,17 +154,26 @@ exports.compressPdf = onRequest(
         '-dSAFER',
         '-sDEVICE=pdfwrite',
         '-dCompatibilityLevel=1.4',
-        `-dPDFSETTINGS=${presetConfig.base}`,
         '-dEmbedAllFonts=true',
         '-dSubsetFonts=true',
+        // Image downsampling
         '-dDownsampleColorImages=true',
         '-dDownsampleGrayImages=true',
         '-dDownsampleMonoImages=true',
         '-dColorImageDownsampleType=/Bicubic',
         '-dGrayImageDownsampleType=/Bicubic',
+        '-dColorImageDownsampleThreshold=1.0',
+        '-dGrayImageDownsampleThreshold=1.0',
         `-dColorImageResolution=${presetConfig.dpi}`,
         `-dGrayImageResolution=${presetConfig.dpi}`,
         `-dMonoImageResolution=${presetConfig.dpi}`,
+        // JPEG quality via QFactor
+        '-dAutoFilterColorImages=false',
+        '-dAutoFilterGrayImages=false',
+        '-dColorImageFilter=/DCTEncode',
+        '-dGrayImageFilter=/DCTEncode',
+        `-c`, `.setpdfwrite << /ColorACSImageDict << /QFactor ${presetConfig.qfactor} >> /GrayACSImageDict << /QFactor ${presetConfig.qfactor} >> >> setdistillerparams`,
+        `-f`,
         `-sOutputFile=${outputPath}`,
         inputPath
       ]);
