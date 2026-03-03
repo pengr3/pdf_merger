@@ -1833,6 +1833,154 @@
         extractAllBtnSplit.addEventListener('click', () => splitPdf('all'));
         extractSelectedBtnSplit.addEventListener('click', () => splitPdf('selected'));
 
+        // ========== COMPRESS PDF SECTION ==========
+
+        // --- State ---
+        let compressFiles = [];         // Array of File objects uploaded by user
+        let compressMode = 'fast';      // 'fast' | 'heavy'
+        let compressResults = [];       // [{fileName, originalSize, compressedBytes}] — stored for download buttons
+
+        // --- DOM references ---
+        const uploadAreaCompress = document.getElementById('uploadAreaCompress');
+        const fileInputCompress = document.getElementById('fileInputCompress');
+        const fileListCompress = document.getElementById('fileListCompress');
+        const compressActions = document.getElementById('compressActions');
+        const clearBtnCompress = document.getElementById('clearBtnCompress');
+        const compressBtnCompress = document.getElementById('compressBtnCompress');
+        const compressHeavyWarning = document.getElementById('compressHeavyWarning');
+        const compressQualityGroup = document.getElementById('compressQualityGroup');
+        const compressQualitySlider = document.getElementById('compressQualitySlider');
+        const compressQualityValue = document.getElementById('compressQualityValue');
+        const compressResultsList = document.getElementById('compressResultsList');
+
+        // --- Mode toggle (COMP-02, COMP-05) ---
+        // Reuse existing radio-option selected class toggling pattern from pdfToolMode (line 1005)
+        document.querySelectorAll('input[name="compressMode"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                compressMode = e.target.value;
+                const isHeavy = compressMode === 'heavy';
+                compressHeavyWarning.style.display = isHeavy ? 'block' : 'none';
+                compressQualityGroup.style.display = isHeavy ? 'block' : 'none';
+
+                // Update selected class on radio-option labels (visual toggle)
+                document.querySelectorAll('input[name="compressMode"]').forEach(r => {
+                    r.closest('.radio-option').classList.toggle('selected', r.checked);
+                });
+            });
+        });
+
+        // --- Quality slider (COMP-04) ---
+        compressQualitySlider.addEventListener('input', (e) => {
+            compressQualityValue.textContent = e.target.value + '%';
+        });
+
+        // --- Upload area handlers (COMP-01) ---
+        uploadAreaCompress.addEventListener('click', () => fileInputCompress.click());
+
+        uploadAreaCompress.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadAreaCompress.classList.add('dragover');
+        });
+
+        uploadAreaCompress.addEventListener('dragleave', () => {
+            uploadAreaCompress.classList.remove('dragover');
+        });
+
+        uploadAreaCompress.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadAreaCompress.classList.remove('dragover');
+            const pdfFiles = Array.from(e.dataTransfer.files).filter(f =>
+                f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')
+            );
+            if (pdfFiles.length === 0) {
+                showStatus('Please drop PDF files only.', 'error', 'statusCompress');
+                return;
+            }
+            addCompressFiles(pdfFiles);
+        });
+
+        fileInputCompress.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                addCompressFiles(Array.from(e.target.files));
+            }
+        });
+
+        function addCompressFiles(newFiles) {
+            for (const file of newFiles) {
+                const sizeMB = file.size / (1024 * 1024);
+                if (sizeMB > 80) {
+                    // Reject files over 80 MB — same gate as Split PDF
+                    showStatus(`File "${file.name}" exceeds 80 MB limit and was skipped.`, 'error', 'statusCompress');
+                    continue;
+                }
+                compressFiles.push(file);
+            }
+            fileInputCompress.value = ''; // Reset input to allow re-uploading same file
+            renderCompressFileList();
+            updateCompressButtons();
+            hideStatus('statusCompress');
+        }
+
+        function removeCompressFile(index) {
+            compressFiles.splice(index, 1);
+            renderCompressFileList();
+            updateCompressButtons();
+        }
+
+        // Expose globally for onclick in file list HTML
+        window.removeCompressFile = removeCompressFile;
+
+        function renderCompressFileList() {
+            if (compressFiles.length === 0) {
+                fileListCompress.innerHTML = '';
+                return;
+            }
+
+            fileListCompress.innerHTML = compressFiles.map((file, i) => {
+                const sizeMB = file.size / (1024 * 1024);
+                const sizeStr = sizeMB >= 1 ? sizeMB.toFixed(2) + ' MB' : (file.size / 1024).toFixed(1) + ' KB';
+                return `<div class="compress-file-item">
+                    <span class="compress-file-name">${escapeHtml(file.name)}</span>
+                    <span class="compress-file-size">${sizeStr}</span>
+                    <button class="compress-file-remove" onclick="removeCompressFile(${i})" title="Remove">&times;</button>
+                </div>`;
+            }).join('');
+        }
+
+        function updateCompressButtons() {
+            const hasFiles = compressFiles.length > 0;
+            compressActions.style.display = hasFiles ? 'flex' : 'none';
+            compressBtnCompress.disabled = !hasFiles;
+        }
+
+        // --- Clear button ---
+        clearBtnCompress.addEventListener('click', clearCompressTool);
+
+        function clearCompressTool() {
+            compressFiles = [];
+            compressResults = [];
+            compressMode = 'fast';
+            fileInputCompress.value = '';
+            fileListCompress.innerHTML = '';
+            compressResultsList.innerHTML = '';
+            compressActions.style.display = 'none';
+            compressBtnCompress.disabled = true;
+            compressHeavyWarning.style.display = 'none';
+            compressQualityGroup.style.display = 'none';
+            compressQualitySlider.value = 75;
+            compressQualityValue.textContent = '75%';
+            hideProgress('progressBarCompress', 'progressFillCompress');
+            hideStatus('statusCompress');
+            // Reset radio to Fast
+            const fastRadio = document.querySelector('input[name="compressMode"][value="fast"]');
+            if (fastRadio) {
+                fastRadio.checked = true;
+                document.querySelectorAll('input[name="compressMode"]').forEach(r => {
+                    r.closest('.radio-option').classList.toggle('selected', r.checked);
+                });
+            }
+        }
+
         function attachPdfDragListeners() {
             const items = fileListPdf.querySelectorAll('.file-item');
 
@@ -2449,7 +2597,7 @@
 
         // Prevent accidental page navigation
         window.addEventListener('beforeunload', (e) => {
-            if (selectedPdfFiles.length > 0 || watermarkFiles.length > 0 || splitPdfFile !== null) {
+            if (selectedPdfFiles.length > 0 || watermarkFiles.length > 0 || splitPdfFile !== null || compressFiles.length > 0) {
                 e.preventDefault();
                 e.returnValue = '';
             }
