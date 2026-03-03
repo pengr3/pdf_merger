@@ -1113,12 +1113,29 @@
             </div>
 
             <div id="compressQualityGroup" class="compress-quality-group" style="display:none;">
-                <div class="slider-group">
-                    <label class="slider-label">
-                        JPEG Quality:
-                        <span class="slider-value" id="compressQualityValue">75%</span>
+                <label style="font-weight:600; margin-bottom:8px; display:block;">Compression Preset:</label>
+                <div class="compress-preset-group">
+                    <label class="radio-option">
+                        <input type="radio" name="compressPreset" value="best" />
+                        <div class="option-label">
+                            <div class="option-title">Best Quality</div>
+                            <div class="option-description">Minimal compression — highest visual fidelity</div>
+                        </div>
                     </label>
-                    <input type="range" id="compressQualitySlider" min="50" max="100" value="75" />
+                    <label class="radio-option selected">
+                        <input type="radio" name="compressPreset" value="balanced" checked />
+                        <div class="option-label">
+                            <div class="option-title">Balanced</div>
+                            <div class="option-description">Good balance of quality and file size</div>
+                        </div>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="compressPreset" value="compressed" />
+                        <div class="option-label">
+                            <div class="option-title">Compressed</div>
+                            <div class="option-description">Maximum size reduction — still readable</div>
+                        </div>
+                    </label>
                 </div>
             </div>
 
@@ -1849,8 +1866,8 @@
         const compressBtnCompress = document.getElementById('compressBtnCompress');
         const compressHeavyWarning = document.getElementById('compressHeavyWarning');
         const compressQualityGroup = document.getElementById('compressQualityGroup');
-        const compressQualitySlider = document.getElementById('compressQualitySlider');
-        const compressQualityValue = document.getElementById('compressQualityValue');
+        const compressPresetValues = { best: 0.92, balanced: 0.75, compressed: 0.55 };
+        let compressPreset = 'balanced';
         const compressResultsList = document.getElementById('compressResultsList');
 
         // --- Mode toggle (COMP-02, COMP-05) ---
@@ -1869,9 +1886,14 @@
             });
         });
 
-        // --- Quality slider (COMP-04) ---
-        compressQualitySlider.addEventListener('input', (e) => {
-            compressQualityValue.textContent = e.target.value + '%';
+        // --- Quality preset toggle (COMP-04) ---
+        document.querySelectorAll('input[name="compressPreset"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                compressPreset = e.target.value;
+                document.querySelectorAll('input[name="compressPreset"]').forEach(r => {
+                    r.closest('.radio-option').classList.toggle('selected', r.checked);
+                });
+            });
         });
 
         // --- Upload area handlers (COMP-01) ---
@@ -1967,8 +1989,14 @@
             compressBtnCompress.disabled = true;
             compressHeavyWarning.style.display = 'none';
             compressQualityGroup.style.display = 'none';
-            compressQualitySlider.value = 75;
-            compressQualityValue.textContent = '75%';
+            compressPreset = 'balanced';
+            const balancedRadio = document.querySelector('input[name="compressPreset"][value="balanced"]');
+            if (balancedRadio) {
+                balancedRadio.checked = true;
+                document.querySelectorAll('input[name="compressPreset"]').forEach(r => {
+                    r.closest('.radio-option').classList.toggle('selected', r.checked);
+                });
+            }
             hideProgress('progressBarCompress', 'progressFillCompress');
             hideStatus('statusCompress');
             // Reset radio to Fast
@@ -2013,12 +2041,15 @@
             // quality: 0.50–1.00 (from slider value / 100)
             // onPageProgress: (pageNum, totalPages) => void — for progress updates
 
+            // Copy buffer before PDF.js consumes it (getDocument transfers ownership, detaching the original)
+            const bufferCopy = arrayBuffer.slice(0);
+
             // Load with PDF.js for rendering
             const pdfJs = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
             const numPages = pdfJs.numPages;
 
             // Load with pdf-lib to get original page dimensions in PDF points
-            const srcDoc = await PDFDocument.load(arrayBuffer);
+            const srcDoc = await PDFDocument.load(bufferCopy);
 
             // Create output PDF document
             const outDoc = await PDFDocument.create();
@@ -2104,7 +2135,7 @@
                             compressedBytes = await compressFast(arrayBuffer);
                         } else {
                             // COMP-02 Heavy: JPEG re-render pipeline
-                            const quality = parseInt(compressQualitySlider.value, 10) / 100;
+                            const quality = compressPresetValues[compressPreset];
                             showStatus(`<div class="spinner"></div> Compressing (Heavy): ${escapeHtml(file.name)}...`, 'loading', 'statusCompress');
                             compressedBytes = await compressFileHeavy(arrayBuffer, quality, (pageNum, numPages) => {
                                 // Progress within this file: allocate proportional slice
