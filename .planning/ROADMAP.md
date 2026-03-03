@@ -90,10 +90,19 @@ Plans:
 
 ### Phase 4: UI/UX overhaul — replace gradient color scheme, remove emojis, add company logo, overall polish
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** Replace the purple gradient color scheme with a monochrome palette derived from the CLMC logo, remove all emojis, add the company logo to the navbar, and apply flat Notion/Linear card styling — purely cosmetic, all tools remain functionally identical
+**Requirements**: UI-01, UI-02, UI-03, UI-04, UI-05, UI-06
 **Depends on:** Phase 3
-**Plans:** 0 plans
+**Success Criteria** (what must be TRUE):
+  1. No purple or gradient colors visible anywhere in the app — entire palette is black/gray/white monochrome
+  2. CLMC logo image displayed in navbar at 48px height with "TOOLS" text suffix
+  3. No emoji characters visible in nav buttons, headings, privacy badges, upload areas, or status messages
+  4. Status messages show CSS-styled colored dot indicators (green/red/yellow) instead of emoji
+  5. Cards and containers have flat design with subtle borders, no heavy shadows, and 4-8px border-radius
+  6. Primary buttons are solid black with dark gray hover state, no gradient or lift effect
+**Plans:** 3 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 4 to break down)
+- [ ] 04-01-PLAN.md -- CSS palette swap: replace all purple colors with monochrome, flatten card/button styles, add status indicator and logo CSS classes
+- [ ] 04-02-PLAN.md -- HTML/JS emoji removal: navbar logo integration, remove all HTML emojis, replace JS emoji status indicators with CSS spans
+- [ ] 04-03-PLAN.md -- Human verification: visual inspection of all five tool tabs

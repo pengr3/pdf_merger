@@ -36,6 +36,15 @@ Requirements for this milestone — Split PDF and Compress PDF features.
 - [x] **NAV-03**: Each tool has independent state — switching tabs preserves file selections in each tool
 - [x] **NAV-04**: The old combined pdf-tools section, radio toggle, pdfToolMode variable, and handlePdfToolSubmit dispatcher are fully removed
 
+### UI/UX Overhaul (Phase 4)
+
+- [ ] **UI-01**: All purple gradient colors (#667eea, #764ba2) replaced with monochrome palette (black/gray/white) throughout the app
+- [ ] **UI-02**: Company logo (CLMC 2026 REGISTERED LOGO.png) displayed in navbar at 48px height with "TOOLS" text suffix
+- [ ] **UI-03**: All emojis removed from nav buttons, section headings, privacy badges, upload areas, and reorder hints
+- [ ] **UI-04**: All emoji status indicators in JavaScript replaced with CSS-styled colored dot indicators (green success, red error, yellow warning)
+- [ ] **UI-05**: Cards and containers use flat design with subtle borders, reduced border-radius (4-8px), and no heavy shadows
+- [ ] **UI-06**: Primary buttons use solid black background (#1a1a1a) with dark gray hover state (#444), no gradients or lift effects
+
 ### Server-Side Compression (Phase 02.1 — INSERTED)
 
 - [x] **SCOMP-01**: Firebase Cloud Function receives PDF via multipart POST, runs Ghostscript with selected preset, returns compressed PDF
@@ -112,12 +121,18 @@ Which phases cover which requirements. Updated during roadmap creation.
 | NAV-02 | Phase 3 - Nav Tab Separation | Complete |
 | NAV-03 | Phase 3 - Nav Tab Separation | Complete |
 | NAV-04 | Phase 3 - Nav Tab Separation | Complete |
+| UI-01 | Phase 4 - UI/UX Overhaul | Pending |
+| UI-02 | Phase 4 - UI/UX Overhaul | Pending |
+| UI-03 | Phase 4 - UI/UX Overhaul | Pending |
+| UI-04 | Phase 4 - UI/UX Overhaul | Pending |
+| UI-05 | Phase 4 - UI/UX Overhaul | Pending |
+| UI-06 | Phase 4 - UI/UX Overhaul | Pending |
 
 **Coverage:**
-- v1 requirements: 26 total (16 original + 6 server-side compression + 4 nav tab separation)
-- Mapped to phases: 26
-- Unmapped: 0 ✓
+- v1 requirements: 32 total (16 original + 6 server-side compression + 4 nav tab separation + 6 UI/UX overhaul)
+- Mapped to phases: 32
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-02*
-*Last updated: 2026-03-03 after phase 03 planning*
+*Last updated: 2026-03-03 after phase 04 planning*
