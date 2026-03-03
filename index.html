@@ -1831,7 +1831,6 @@
         const compressResultsList = document.getElementById('compressResultsList');
 
         // --- Mode toggle (COMP-02, COMP-05) ---
-        // Reuse existing radio-option selected class toggling pattern from pdfToolMode (line 1005)
         document.querySelectorAll('input[name="compressMode"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 compressMode = e.target.value;
@@ -2308,7 +2307,172 @@
         window.removeMergeFile = removeMergeFile;
 
         // ========== PDF TO IMAGES SECTION ==========
-        // TODO: Plan 02 will create this block
+
+        // --- State ---
+        let imagePdfFile = null;
+
+        // --- DOM references ---
+        const uploadAreaImages = document.getElementById('uploadAreaImages');
+        const fileInputImages = document.getElementById('fileInputImages');
+        const fileListImages = document.getElementById('fileListImages');
+        const submitBtnImages = document.getElementById('submitBtnImages');
+        const clearBtnImages = document.getElementById('clearBtnImages');
+        const imageGridImages = document.getElementById('imageGridImages');
+
+        // --- Upload handlers ---
+        uploadAreaImages.addEventListener('click', () => fileInputImages.click());
+
+        uploadAreaImages.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadAreaImages.classList.add('dragover');
+        });
+
+        uploadAreaImages.addEventListener('dragleave', () => {
+            uploadAreaImages.classList.remove('dragover');
+        });
+
+        uploadAreaImages.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadAreaImages.classList.remove('dragover');
+            const files = Array.from(e.dataTransfer.files).filter(f =>
+                f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')
+            );
+            if (files.length === 0) {
+                showStatus('Please drop a PDF file', 'error', 'statusImages');
+                return;
+            }
+            imagePdfFile = files[0]; // Single file only
+            renderImageFileList();
+            updateImageButtons();
+            hideStatus('statusImages');
+        });
+
+        fileInputImages.addEventListener('change', (e) => {
+            imagePdfFile = e.target.files.length > 0 ? e.target.files[0] : null;
+            renderImageFileList();
+            updateImageButtons();
+            hideStatus('statusImages');
+        });
+
+        clearBtnImages.addEventListener('click', () => {
+            imagePdfFile = null;
+            fileInputImages.value = '';
+            imageGridImages.innerHTML = '';
+            renderImageFileList();
+            updateImageButtons();
+            hideStatus('statusImages');
+        });
+
+        function renderImageFileList() {
+            if (!imagePdfFile) {
+                fileListImages.innerHTML = '';
+                return;
+            }
+            const sizeMB = (imagePdfFile.size / 1024 / 1024).toFixed(2);
+            fileListImages.innerHTML = `
+                <div class="file-item">
+                    <div class="file-info">
+                        <div class="file-name">${escapeHtml(imagePdfFile.name)}</div>
+                        <div class="file-size">${sizeMB} MB</div>
+                    </div>
+                    <button class="remove-btn" onclick="removeImageFile()">Remove</button>
+                </div>
+            `;
+        }
+
+        function removeImageFile() {
+            imagePdfFile = null;
+            fileInputImages.value = '';
+            imageGridImages.innerHTML = '';
+            renderImageFileList();
+            updateImageButtons();
+        }
+
+        function updateImageButtons() {
+            submitBtnImages.disabled = imagePdfFile === null;
+            clearBtnImages.disabled = imagePdfFile === null;
+        }
+
+        async function convertPdfToImages() {
+            if (!imagePdfFile) {
+                showStatus('Please upload a PDF file', 'error', 'statusImages');
+                return;
+            }
+
+            submitBtnImages.disabled = true;
+            clearBtnImages.disabled = true;
+            imageGridImages.innerHTML = '';
+
+            showStatus('<div class="spinner"></div> Converting PDF to images...', 'loading', 'statusImages');
+            updateProgress(0, 'progressBarImages', 'progressFillImages');
+
+            try {
+                const arrayBuffer = await imagePdfFile.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                const numPages = pdf.numPages;
+
+                const images = [];
+
+                for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+                    const page = await pdf.getPage(pageNum);
+                    const viewport = page.getViewport({ scale: 2.0 });
+
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+
+                    await page.render({
+                        canvasContext: context,
+                        viewport: viewport
+                    }).promise;
+
+                    const imageDataUrl = canvas.toDataURL('image/png');
+                    images.push({ pageNum, dataUrl: imageDataUrl });
+
+                    const progress = (pageNum / numPages) * 100;
+                    updateProgress(progress, 'progressBarImages', 'progressFillImages');
+                }
+
+                imageGridImages.innerHTML = images.map(img => `
+                    <div class="image-item">
+                        <img src="${img.dataUrl}" alt="Page ${img.pageNum}" />
+                        <div style="font-size: 12px; color: #666; margin-bottom: 8px;">Page ${img.pageNum}</div>
+                        <button class="download-btn" onclick="downloadImage('${img.dataUrl}', 'page-${img.pageNum}.png')">
+                            Download
+                        </button>
+                    </div>
+                `).join('');
+
+                showStatus(`✅ Successfully converted ${numPages} pages to images!`, 'success', 'statusImages');
+
+                setTimeout(() => {
+                    hideProgress('progressBarImages', 'progressFillImages');
+                }, 1000);
+
+            } catch (error) {
+                hideProgress('progressBarImages', 'progressFillImages');
+                showStatus(`❌ Error: ${error.message}`, 'error', 'statusImages');
+                console.error('PDF to images error:', error);
+            } finally {
+                submitBtnImages.disabled = false;
+                clearBtnImages.disabled = false;
+            }
+        }
+
+        function downloadImage(dataUrl, filename) {
+            const a = document.createElement('a');
+            a.href = dataUrl;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        // --- Event listeners + globals ---
+        submitBtnImages.addEventListener('click', convertPdfToImages);
+        window.removeImageFile = removeImageFile;
+        window.downloadImage = downloadImage;
 
         // ========== WATERMARK INSERTER ==========
         const uploadAreaWatermark = document.getElementById('uploadAreaWatermark');
@@ -2700,7 +2864,7 @@
 
         // Prevent accidental page navigation
         window.addEventListener('beforeunload', (e) => {
-            if (mergeFiles.length > 0 || watermarkFiles.length > 0 || splitPdfFile !== null || compressFiles.length > 0) {
+            if (mergeFiles.length > 0 || imagePdfFile !== null || watermarkFiles.length > 0 || splitPdfFile !== null || compressFiles.length > 0) {
                 e.preventDefault();
                 e.returnValue = '';
             }
