@@ -49,13 +49,13 @@ function isRateLimited(ip) {
 const GS_PRESETS = {
   best: {
     // Target: ~30% file size saving — minimal compression, highest quality
-    base: '/ebook',
-    dpi: 200
+    base: '/prepress',
+    dpi: 250
   },
   balanced: {
     // Target: ~50% file size saving — good balance
     base: '/ebook',
-    dpi: 100
+    dpi: 150
   },
   compressed: {
     // Target: ~90% file size saving — maximum compression
