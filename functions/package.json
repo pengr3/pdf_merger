@@ -1,0 +1,12 @@
+{
+  "name": "pdf-compressor",
+  "description": "Ghostscript PDF compression via Firebase Cloud Functions",
+  "engines": {
+    "node": "20"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-functions": "^6.0.0",
+    "busboy": "^1.6.0"
+  }
+}
