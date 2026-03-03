@@ -29,6 +29,13 @@ Requirements for this milestone — Split PDF and Compress PDF features.
 - [ ] **COMP-07**: User can download each compressed PDF individually
 - [x] **COMP-08**: App detects encrypted PDFs and shows a clear error before attempting to process
 
+### Nav Tab Separation (Phase 3)
+
+- [ ] **NAV-01**: Merge PDFs has its own independent nav tab with dedicated HTML section, state variables, and upload handlers
+- [ ] **NAV-02**: PDF to Images has its own independent nav tab with dedicated HTML section, state variables, and upload handlers
+- [ ] **NAV-03**: Each tool has independent state — switching tabs preserves file selections in each tool
+- [ ] **NAV-04**: The old combined pdf-tools section, radio toggle, pdfToolMode variable, and handlePdfToolSubmit dispatcher are fully removed
+
 ### Server-Side Compression (Phase 02.1 — INSERTED)
 
 - [x] **SCOMP-01**: Firebase Cloud Function receives PDF via multipart POST, runs Ghostscript with selected preset, returns compressed PDF
@@ -101,12 +108,16 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SCOMP-04 | Phase 02.1 - Server-Side Compression | Complete |
 | SCOMP-05 | Phase 02.1 - Server-Side Compression | Complete |
 | SCOMP-06 | Phase 02.1 - Server-Side Compression | Complete |
+| NAV-01 | Phase 3 - Nav Tab Separation | Pending |
+| NAV-02 | Phase 3 - Nav Tab Separation | Pending |
+| NAV-03 | Phase 3 - Nav Tab Separation | Pending |
+| NAV-04 | Phase 3 - Nav Tab Separation | Pending |
 
 **Coverage:**
-- v1 requirements: 22 total (16 original + 6 server-side compression)
-- Mapped to phases: 22
+- v1 requirements: 26 total (16 original + 6 server-side compression + 4 nav tab separation)
+- Mapped to phases: 26
 - Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-03-02*
-*Last updated: 2026-03-02 after plan 01-split-pdf/02 completion*
+*Last updated: 2026-03-03 after phase 03 planning*

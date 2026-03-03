@@ -74,13 +74,19 @@ Plans:
 
 ### Phase 3: Split Merge PDFs and PDF to Images into separate nav tabs
 
-**Goal:** [To be planned]
-**Requirements**: TBD
-**Depends on:** Phase 2
-**Plans:** 0 plans
+**Goal:** Split the combined "PDF Tools" nav tab (radio-toggle between Merge PDFs and PDF to Images) into two independent nav tabs, each with their own HTML section, state, DOM references, and upload handlers — eliminating the confusing radio-toggle UX
+**Depends on:** Phase 02.1
+**Requirements**: NAV-01, NAV-02, NAV-03, NAV-04
+**Success Criteria** (what must be TRUE):
+  1. Merge PDFs has its own nav tab with independent file list, drag reorder, and merge functionality
+  2. PDF to Images has its own nav tab with single-file upload and page-to-image conversion
+  3. Each tool's file state persists independently when switching tabs
+  4. The old combined pdf-tools section, radio toggle, and mode dispatcher are fully removed
+**Plans:** 2 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 3 to break down)
+- [ ] 03-01-PLAN.md -- HTML refactoring (nav buttons + both sections) + Merge PDF JS block with independent state and handlers
+- [ ] 03-02-PLAN.md -- PDF to Images JS block + dead code cleanup + beforeunload guard update + human verification
 
 ### Phase 4: UI/UX overhaul — replace gradient color scheme, remove emojis, add company logo, overall polish
 
