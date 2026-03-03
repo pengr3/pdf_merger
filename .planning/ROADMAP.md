@@ -55,6 +55,23 @@ Phases execute in numeric order: 1 → 2
 | 1. Split PDF | 3/3 | UAT Complete |  |
 | 2. Compress PDF | 1/2 | In Progress | - |
 
+### Phase 02.1: Server-Side PDF Compression via Firebase (INSERTED)
+
+**Goal:** Replace client-side Heavy (JPEG Re-render) mode with server-side Ghostscript compression via Firebase Cloud Functions, preserving text selectability while achieving effective image downsampling across three quality presets
+**Depends on:** Phase 02
+**Requirements**: SCOMP-01, SCOMP-02, SCOMP-03, SCOMP-04, SCOMP-05, SCOMP-06
+**Success Criteria** (what must be TRUE):
+  1. User can select Server (Ghostscript) mode and compress a PDF using one of three presets (Best Quality 300DPI, Balanced 150DPI, Compressed 72DPI)
+  2. Text remains selectable in server-compressed PDFs (Ghostscript preserves text vectors)
+  3. A privacy disclosure is visible when server mode is selected, informing the user files are sent to the server
+  4. Fast (Lossless) client-side mode continues to work unchanged
+  5. Old Heavy (JPEG Re-render) mode and its text-destruction warning are fully removed from the UI
+**Plans:** 2 plans
+
+Plans:
+- [ ] 02.1-01-PLAN.md -- Firebase Cloud Function: create functions/index.js with Ghostscript compressPdf endpoint, project config, user deploys
+- [ ] 02.1-02-PLAN.md -- Frontend integration: replace Heavy mode with Server mode, add privacy disclosure, wire compressFileServer(), end-to-end verification
+
 ### Phase 3: Split Merge PDFs and PDF to Images into separate nav tabs
 
 **Goal:** [To be planned]
