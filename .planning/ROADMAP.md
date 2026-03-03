@@ -52,8 +52,11 @@ Phases execute in numeric order: 1 → 2
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Split PDF | 3/3 | UAT Complete |  |
-| 2. Compress PDF | 1/2 | In Progress | - |
+| 1. Split PDF | 3/3 | Complete | 2026-03-03 |
+| 2. Compress PDF | 2/2 | Complete | 2026-03-03 |
+| 2.1. Server-Side Compression | 2/2 | Complete | 2026-03-03 |
+| 3. Split Merge PDFs / PDF to Images | 2/2 | Complete | 2026-03-03 |
+| 4. UI/UX Overhaul | 3/3 | Complete | 2026-03-03 |
 
 ### Phase 02.1: Server-Side PDF Compression via Firebase (INSERTED)
 
@@ -100,9 +103,9 @@ Plans:
   4. Status messages show CSS-styled colored dot indicators (green/red/yellow) instead of emoji
   5. Cards and containers have flat design with subtle borders, no heavy shadows, and 4-8px border-radius
   6. Primary buttons are solid black with dark gray hover state, no gradient or lift effect
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
-- [ ] 04-01-PLAN.md -- CSS palette swap: replace all purple colors with monochrome, flatten card/button styles, add status indicator and logo CSS classes
-- [ ] 04-02-PLAN.md -- HTML/JS emoji removal: navbar logo integration, remove all HTML emojis, replace JS emoji status indicators with CSS spans
-- [ ] 04-03-PLAN.md -- Human verification: visual inspection of all five tool tabs
+- [x] 04-01-PLAN.md -- CSS palette swap: replace all purple colors with monochrome, flatten card/button styles, add status indicator and logo CSS classes
+- [x] 04-02-PLAN.md -- HTML/JS emoji removal: navbar logo integration, remove all HTML emojis, replace JS emoji status indicators with CSS spans
+- [x] 04-03-PLAN.md -- Human verification: visual inspection of all five tool tabs
