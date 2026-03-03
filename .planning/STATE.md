@@ -79,6 +79,7 @@ Recent decisions affecting current work:
 
 - Phase 3 added: Split Merge PDFs and PDF to Images into separate nav tabs
 - Phase 4 added: UI/UX overhaul — replace gradient color scheme, remove emojis, add company logo, overall polish
+- Phase 02.1 inserted after Phase 02: Server-Side PDF Compression via Firebase (URGENT) — client-side Heavy mode quality insufficient, moving to Ghostscript server-side compression
 
 ### Blockers/Concerns
 
