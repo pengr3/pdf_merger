@@ -85,8 +85,8 @@ Plans:
 **Plans:** 2/2 plans complete
 
 Plans:
-- [ ] 03-01-PLAN.md -- HTML refactoring (nav buttons + both sections) + Merge PDF JS block with independent state and handlers
-- [ ] 03-02-PLAN.md -- PDF to Images JS block + dead code cleanup + beforeunload guard update + human verification
+- [x] 03-01-PLAN.md -- HTML refactoring (nav buttons + both sections) + Merge PDF JS block with independent state and handlers
+- [x] 03-02-PLAN.md -- PDF to Images JS block + dead code cleanup + beforeunload guard update + human verification
 
 ### Phase 4: UI/UX overhaul — replace gradient color scheme, remove emojis, add company logo, overall polish
 
