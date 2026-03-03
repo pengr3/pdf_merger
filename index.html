@@ -13,15 +13,16 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #f0f0f0;
             min-height: 100vh;
             padding: 20px;
         }
 
         .navbar {
             background: white;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border-radius: 6px;
+            box-shadow: none;
+            border: 1px solid #e5e7eb;
             padding: 20px 30px;
             margin-bottom: 20px;
             max-width: 1200px;
@@ -34,7 +35,9 @@
             font-weight: 700;
             color: #333;
             margin-bottom: 15px;
-            display: block;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .nav-links {
@@ -45,10 +48,10 @@
 
         .nav-link {
             padding: 10px 20px;
-            border: 2px solid #667eea;
+            border: 2px solid #1a1a1a;
             border-radius: 8px;
             background: white;
-            color: #667eea;
+            color: #1a1a1a;
             cursor: pointer;
             font-weight: 600;
             transition: all 0.3s ease;
@@ -56,18 +59,19 @@
         }
 
         .nav-link:hover {
-            background: #f0f2ff;
+            background: #f5f5f5;
         }
 
         .nav-link.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #1a1a1a;
             color: white;
         }
 
         .container {
             background: white;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            box-shadow: none;
+            border: 1px solid #e5e7eb;
             padding: 40px;
             max-width: 1200px;
             margin: 0 auto;
@@ -93,7 +97,7 @@
             margin-bottom: 15px;
             font-size: 22px;
             margin-top: 30px;
-            border-bottom: 2px solid #667eea;
+            border-bottom: 2px solid #1a1a1a;
             padding-bottom: 10px;
         }
 
@@ -120,24 +124,24 @@
         }
 
         .upload-area {
-            border: 2px dashed #667eea;
-            border-radius: 12px;
+            border: 2px dashed #aaa;
+            border-radius: 6px;
             padding: 40px 20px;
             text-align: center;
             margin-bottom: 20px;
             cursor: pointer;
             transition: all 0.3s ease;
-            background: #f8f9ff;
+            background: #fafafa;
         }
 
         .upload-area:hover {
-            border-color: #764ba2;
-            background: #f0f2ff;
+            border-color: #555;
+            background: #f5f5f5;
         }
 
         .upload-area.dragover {
-            border-color: #764ba2;
-            background: #e8ebff;
+            border-color: #555;
+            background: #ebebeb;
             transform: scale(1.02);
         }
 
@@ -147,7 +151,7 @@
         }
 
         .upload-text {
-            color: #667eea;
+            color: #555;
             font-weight: 600;
             margin-bottom: 5px;
         }
@@ -207,7 +211,7 @@
         }
 
         .file-item.drag-over {
-            border-top: 3px solid #667eea;
+            border-top: 3px solid #1a1a1a;
             margin-top: 8px;
         }
 
@@ -231,7 +235,7 @@
         }
 
         .file-order {
-            background: #667eea;
+            background: #1a1a1a;
             color: white;
             width: 28px;
             height: 28px;
@@ -306,7 +310,7 @@
         .submit-btn {
             flex: 2;
             min-width: 150px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #1a1a1a;
             color: white;
             border: none;
             padding: 16px;
@@ -315,12 +319,11 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
         }
 
         .submit-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+            transform: none;
+            background: #444;
         }
 
         .submit-btn:disabled,
@@ -360,7 +363,7 @@
 
         .spinner {
             border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
+            border-top: 3px solid #1a1a1a;
             border-radius: 50%;
             width: 20px;
             height: 20px;
@@ -387,7 +390,7 @@
 
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            background: #1a1a1a;
             width: 0%;
             transition: width 0.3s ease;
         }
@@ -400,7 +403,7 @@
         }
 
         .footer a {
-            color: #667eea;
+            color: #555;
             text-decoration: none;
         }
 
@@ -409,9 +412,9 @@
         }
 
         .stats {
-            background: #f8f9ff;
+            background: #f5f5f5;
             padding: 15px;
-            border-radius: 8px;
+            border-radius: 6px;
             margin-top: 15px;
             font-size: 13px;
             color: #666;
@@ -433,9 +436,9 @@
         }
 
         .options-group {
-            background: #f8f9ff;
+            background: #f5f5f5;
             padding: 20px;
-            border-radius: 12px;
+            border-radius: 6px;
             margin-bottom: 20px;
         }
 
@@ -465,8 +468,8 @@
         }
 
         .radio-option:hover {
-            border-color: #667eea;
-            background: #f0f2ff;
+            border-color: #1a1a1a;
+            background: #f5f5f5;
         }
 
         .radio-option input[type="radio"] {
@@ -480,8 +483,8 @@
         }
 
         .radio-option.selected {
-            border-color: #667eea;
-            background: #f0f2ff;
+            border-color: #1a1a1a;
+            background: #f5f5f5;
         }
 
         .option-label {
@@ -510,7 +513,7 @@
 
         .slider-value {
             display: inline-block;
-            background: #667eea;
+            background: #1a1a1a;
             color: white;
             padding: 4px 12px;
             border-radius: 4px;
@@ -555,7 +558,7 @@
         }
 
         .image-item .download-btn {
-            background: #667eea;
+            background: #1a1a1a;
             color: white;
             border: none;
             padding: 8px 16px;
@@ -568,13 +571,13 @@
         }
 
         .image-item .download-btn:hover {
-            background: #5568d3;
+            background: #444;
         }
 
         /* ===== SPLIT PDF ===== */
         .split-file-info {
-            background: #f0f4ff;
-            border: 1px solid #c7d2fe;
+            background: #f5f5f5;
+            border: 1px solid #ddd;
             border-radius: 8px;
             padding: 12px 16px;
             margin-top: 15px;
@@ -611,12 +614,12 @@
         }
 
         .split-range-input:focus {
-            border-color: #667eea;
+            border-color: #1a1a1a;
         }
 
         .split-apply-btn {
             padding: 10px 20px;
-            background: #667eea;
+            background: #1a1a1a;
             color: white;
             border: none;
             border-radius: 8px;
@@ -628,7 +631,7 @@
         }
 
         .split-apply-btn:hover {
-            background: #5568d3;
+            background: #444;
         }
 
         .split-range-error {
@@ -657,13 +660,13 @@
         }
 
         .split-thumb-card:hover {
-            border-color: #667eea;
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+            border-color: #1a1a1a;
+            box-shadow: none;
         }
 
         .split-thumb-card.selected {
-            border-color: #667eea;
-            background: #f0f4ff;
+            border-color: #1a1a1a;
+            background: #f5f5f5;
         }
 
         .split-thumb-card img {
@@ -685,7 +688,7 @@
             position: absolute;
             top: 4px;
             right: 4px;
-            background: #667eea;
+            background: #1a1a1a;
             color: white;
             border-radius: 50%;
             width: 20px;
@@ -795,7 +798,7 @@
 
         .compress-download-btn {
             padding: 8px 16px;
-            background: #667eea;
+            background: #1a1a1a;
             color: white;
             border: none;
             border-radius: 8px;
@@ -806,7 +809,7 @@
         }
 
         .compress-download-btn:hover {
-            background: #5568d3;
+            background: #444;
         }
 
         .compress-file-item {
@@ -885,6 +888,33 @@
             .clear-btn, .submit-btn {
                 width: 100%;
             }
+        }
+
+        /* ===== STATUS INDICATORS ===== */
+        .status-icon {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 6px;
+            vertical-align: middle;
+            flex-shrink: 0;
+        }
+        .status-icon.status-success { background: #22c55e; }
+        .status-icon.status-error { background: #ef4444; }
+        .status-icon.status-warning { background: #f59e0b; }
+
+        /* ===== NAVBAR LOGO ===== */
+        .navbar-logo {
+            height: 48px;
+            width: auto;
+            display: block;
+        }
+        .navbar-tools-text {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            color: #1a1a1a;
         }
     </style>
 </head>
