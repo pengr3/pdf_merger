@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in_progress
-last_updated: "2026-03-03T02:44:00Z"
+last_updated: "2026-03-03T03:35:00Z"
 progress:
   total_phases: 4
   completed_phases: 0
-  total_plans: 6
-  completed_plans: 4
+  total_plans: 7
+  completed_plans: 5
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-02)
 
 **Core value:** Files never leave the user's device — every PDF operation runs 100% in-browser
-**Current focus:** Phase 2 — Compress PDF
+**Current focus:** Phase 02.1 — Server-Side PDF Compression via Firebase
 
 ## Current Position
 
-Phase: 2 of 4 (Compress PDF)
-Plan: 1 of 2 in current phase — COMPLETE
-Status: Plan 02-01 complete — UI foundation built, ready for compression logic (plan 02-02)
-Last activity: 2026-03-03 — Phase 2 Plan 01 complete (nav button, HTML, CSS, upload handlers, mode toggle)
+Phase: 02.1 of 4+ (Server-Side PDF Compression via Firebase)
+Plan: 1 of 2 in current phase — CHECKPOINT (Task 1 complete, awaiting Firebase deployment from user)
+Status: Plan 02.1-01 Task 1 complete — Cloud Function code written, awaiting user Firebase project setup + deployment + URL
+Last activity: 2026-03-03 — Phase 02.1 Plan 01 Task 1 complete (compressPdf Cloud Function, firebase.json, .firebaserc, npm install)
 
-Progress: [██████░░░░] 60%
+Progress: [███████░░░] 70%
 
 ## Performance Metrics
 
@@ -42,9 +42,10 @@ Progress: [██████░░░░] 60%
 |-------|-------|-------|----------|
 | 01-split-pdf | 2 | 4min | 2min |
 | 02-compress-pdf | 1 | 1min | 1min |
+| 02.1-server-side-pdf-compression-via-firebase | 1 | 1min | 1min |
 
 **Recent Trend:**
-- Last 5 plans: 01-split-pdf/01 (2min), 01-split-pdf/02 (2min), 02-compress-pdf/01 (1min)
+- Last 5 plans: 01-split-pdf/01 (2min), 01-split-pdf/02 (2min), 02-compress-pdf/01 (1min), 02.1-01 (1min)
 - Trend: Fast execution, ~1-2min per plan
 
 *Updated after each plan completion*
@@ -70,6 +71,11 @@ Recent decisions affecting current work:
 - [Phase 02-compress-pdf/01]: Quality slider range 50-100 (not 1-100) to prevent destructively low JPEG quality output; default 75%
 - [Phase 02-compress-pdf/01]: 80 MB per-file gate in addCompressFiles() — invalid files skipped, valid files in same batch still added
 - [Phase 02-compress-pdf/01]: window.removeCompressFile exposed globally for inline onclick in renderCompressFileList() template literals
+- [Phase 02.1-server-side-pdf-compression-via-firebase/01]: Use firebase-functions v6 (2nd gen) onRequest with cors:true, memory:512MiB, timeoutSeconds:300, region:us-central1
+- [Phase 02.1-server-side-pdf-compression-via-firebase/01]: Busboy for multipart parsing (not Multer) — Multer broken in Cloud Functions (body pre-parsed by middleware)
+- [Phase 02.1-server-side-pdf-compression-via-firebase/01]: Dual-path rawBody: if (req.rawBody) bb.end(req.rawBody); else req.pipe(bb) — handles emulator vs production
+- [Phase 02.1-server-side-pdf-compression-via-firebase/01]: .firebaserc uses YOUR_PROJECT_ID placeholder — user must replace with actual Firebase project ID before deploy
+- [Phase 02.1-server-side-pdf-compression-via-firebase/01]: UUID temp files in /tmp — crypto.randomUUID() prevents concurrent request collisions
 
 ### Pending Todos
 
@@ -90,5 +96,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed 02-compress-pdf/02-01-PLAN.md — ready for plan 02-02 (compression logic)
+Stopped at: 02.1-01 checkpoint:human-action — Task 1 complete (Cloud Function code + Firebase config created), awaiting user Firebase project creation, Blaze plan upgrade, deploy, and endpoint URL
 Resume file: None
