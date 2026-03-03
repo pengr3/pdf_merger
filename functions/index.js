@@ -48,9 +48,9 @@ function isRateLimited(ip) {
 // Target savings are approximate — actual results depend on PDF content (image vs text ratio)
 const GS_PRESETS = {
   best: {
-    // Target: ~80% file size saving — aggressive but readable
+    // Target: ~30% file size saving — minimal compression, highest quality
     base: '/ebook',
-    dpi: 50
+    dpi: 200
   },
   balanced: {
     // Target: ~50% file size saving — good balance
