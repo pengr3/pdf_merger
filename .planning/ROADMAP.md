@@ -39,7 +39,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. In Heavy mode, user can drag a quality slider (50-100%) to control JPEG compression before downloading
   4. Before starting Heavy mode, a visible warning explains that the text layer will be destroyed and text will no longer be selectable
   5. When the uploaded PDF is encrypted, the app shows a clear error and does not attempt to process it
-**Plans**: TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 02-01-PLAN.md -- Foundation + UI: nav button, HTML section, CSS, mode toggle, quality slider, upload handlers, file list
+- [ ] 02-02-PLAN.md -- Compression logic + results: Fast/Heavy engines, orchestrator, before/after display, individual download, human verification
 
 ## Progress
 
@@ -48,8 +52,8 @@ Phases execute in numeric order: 1 → 2
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Split PDF | 2/3 | In Progress|  |
-| 2. Compress PDF | 0/TBD | Not started | - |
+| 1. Split PDF | 3/3 | UAT Complete |  |
+| 2. Compress PDF | 0/2 | Planned | - |
 
 ### Phase 3: Split Merge PDFs and PDF to Images into separate nav tabs
 
