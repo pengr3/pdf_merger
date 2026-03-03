@@ -43,14 +43,25 @@ function isRateLimited(ip) {
   return false;
 }
 
-// Ghostscript preset mapping for the three user-facing compression presets
-// best -> /prepress (300 DPI) - Best Quality, minimal compression
-// balanced -> /ebook (150 DPI) - Balanced size/quality
-// compressed -> /screen (72 DPI) - Maximum compression
+// Ghostscript preset configurations with custom DPI and downsampling
+// Uses explicit resolution flags instead of just -dPDFSETTINGS for more aggressive compression
+// Target savings are approximate — actual results depend on PDF content (image vs text ratio)
 const GS_PRESETS = {
-  best:       '/prepress',
-  balanced:   '/ebook',
-  compressed: '/screen'
+  best: {
+    // Target: ~80% file size saving — aggressive but readable
+    base: '/ebook',
+    dpi: 50
+  },
+  balanced: {
+    // Target: ~50% file size saving — good balance
+    base: '/ebook',
+    dpi: 100
+  },
+  compressed: {
+    // Target: ~90% file size saving — maximum compression
+    base: '/screen',
+    dpi: 36
+  }
 };
 
 exports.compressPdf = onRequest(
@@ -116,8 +127,8 @@ exports.compressPdf = onRequest(
       return res.status(400).json({ error: 'No PDF file received' });
     }
 
-    // Map user-facing preset to Ghostscript flag; default to balanced if unknown
-    const gsPreset = GS_PRESETS[preset] || GS_PRESETS.balanced;
+    // Map user-facing preset to config; default to balanced if unknown
+    const presetConfig = GS_PRESETS[preset] || GS_PRESETS.balanced;
 
     // Generate unique temp file names to prevent concurrent request collisions
     // CRITICAL: Never use static paths like /tmp/input.pdf — concurrent requests will corrupt
@@ -129,6 +140,7 @@ exports.compressPdf = onRequest(
       await fs.writeFile(inputPath, pdfBuffer);
 
       // Invoke Ghostscript via child_process.execFile (system binary at /usr/bin/gs)
+      // Uses custom DPI and downsampling flags for more aggressive compression
       // CRITICAL flags:
       //   -q          : quiet, suppress normal output
       //   -dNOPAUSE   : no interactive pause between pages (required for non-interactive)
@@ -141,14 +153,30 @@ exports.compressPdf = onRequest(
         '-dSAFER',
         '-sDEVICE=pdfwrite',
         '-dCompatibilityLevel=1.4',
-        `-dPDFSETTINGS=${gsPreset}`,
+        `-dPDFSETTINGS=${presetConfig.base}`,
         '-dEmbedAllFonts=true',
         '-dSubsetFonts=true',
+        '-dDownsampleColorImages=true',
+        '-dDownsampleGrayImages=true',
+        '-dDownsampleMonoImages=true',
+        '-dColorImageDownsampleType=/Bicubic',
+        '-dGrayImageDownsampleType=/Bicubic',
+        `-dColorImageResolution=${presetConfig.dpi}`,
+        `-dGrayImageResolution=${presetConfig.dpi}`,
+        `-dMonoImageResolution=${presetConfig.dpi}`,
         `-sOutputFile=${outputPath}`,
         inputPath
       ]);
 
       const compressedBuffer = await fs.readFile(outputPath);
+
+      // Guard: if compression made the file bigger, return the original
+      if (compressedBuffer.length >= pdfBuffer.length) {
+        res.set('Content-Type', 'application/pdf');
+        res.set('Content-Disposition', 'attachment; filename="compressed.pdf"');
+        res.set('X-Compression-Note', 'already-optimal');
+        return res.status(200).send(pdfBuffer);
+      }
 
       // Return compressed PDF binary
       // CRITICAL: Use res.set() before res.send() — do not manually set headers after send
