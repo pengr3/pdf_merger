@@ -66,7 +66,7 @@ Phases execute in numeric order: 1 → 2
   3. A privacy disclosure is visible when server mode is selected, informing the user files are sent to the server
   4. Fast (Lossless) client-side mode continues to work unchanged
   5. Old Heavy (JPEG Re-render) mode and its text-destruction warning are fully removed from the UI
-**Plans:** 2/2 plans complete
+**Plans:** 4/2 plans complete
 
 Plans:
 - [x] 02.1-01-PLAN.md -- Firebase Cloud Function: create functions/index.js with Ghostscript compressPdf endpoint, project config, user deploys
