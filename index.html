@@ -108,21 +108,6 @@
             font-size: 14px;
         }
 
-        .privacy-badge {
-            background: #d4edda;
-            color: #155724;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            text-align: center;
-            margin-bottom: 30px;
-            border: 1px solid #c3e6cb;
-        }
-
-        .privacy-badge strong {
-            font-weight: 600;
-        }
-
         .upload-area {
             border: 2px dashed #aaa;
             border-radius: 6px;
@@ -725,16 +710,6 @@
         }
 
         /* ===== COMPRESS PDF ===== */
-        .compress-privacy-notice {
-            background: #eff6ff;
-            border: 1px solid #bfdbfe;
-            border-radius: 8px;
-            padding: 12px 16px;
-            margin-top: 15px;
-            font-size: 14px;
-            color: #1e40af;
-        }
-
         .compress-quality-group {
             margin-top: 15px;
         }
@@ -939,10 +914,6 @@
             <h1>Merge PDFs</h1>
             <p class="subtitle">Combine multiple PDF files into one document</p>
 
-            <div class="privacy-badge">
-                <strong>100% Private</strong> - All processing happens in your browser. No files are uploaded to any server.
-            </div>
-
             <div class="upload-area" id="uploadAreaMerge">
                 <div class="upload-icon" style="font-size: 36px; color: #aaa;">&#8593;</div>
                 <div class="upload-text">Click to upload or drag & drop</div>
@@ -974,10 +945,6 @@
             <h1>PDF to Images</h1>
             <p class="subtitle">Convert each PDF page to a downloadable image</p>
 
-            <div class="privacy-badge">
-                <strong>100% Private</strong> - All processing happens in your browser. No files are uploaded to any server.
-            </div>
-
             <div class="upload-area" id="uploadAreaImages">
                 <div class="upload-icon" style="font-size: 36px; color: #aaa;">&#8593;</div>
                 <div class="upload-text">Click to upload or drag and drop</div>
@@ -1005,10 +972,6 @@
         <div id="watermark" class="tool-section">
             <h1>Watermark Inserter</h1>
             <p class="subtitle">Add watermarks to your PDF files and images</p>
-
-            <div class="privacy-badge">
-                <strong>100% Private</strong> - All processing happens in your browser. No files are uploaded to any server.
-            </div>
 
             <h2>Upload Your File</h2>
             <div class="upload-area" id="uploadAreaWatermark">
@@ -1077,10 +1040,6 @@
             <h1>Split PDF</h1>
             <p class="subtitle">Extract pages from a PDF and download as a ZIP archive</p>
 
-            <div class="privacy-badge">
-                <strong>100% Private</strong> - All processing happens in your browser. No files are uploaded to any server.
-            </div>
-
             <div class="upload-area" id="uploadAreaSplit">
                 <div class="upload-icon" style="font-size: 36px; color: #aaa;">&#8593;</div>
                 <div class="upload-text">Click to upload or drag & drop</div>
@@ -1126,10 +1085,6 @@
             <h1>Compress PDF</h1>
             <p class="subtitle">Reduce PDF file size with Fast or Server compression</p>
 
-            <div class="privacy-badge">
-                <strong>Privacy First</strong> - Fast mode processes entirely in your browser. Server mode sends files to our secure server for processing.
-            </div>
-
             <div class="options-group">
                 <h2>Compression Mode</h2>
                 <div class="radio-group">
@@ -1137,22 +1092,20 @@
                         <input type="radio" name="compressMode" value="fast" checked />
                         <div class="option-label">
                             <div class="option-title">Fast (Lossless)</div>
-                            <div class="option-description">Structural optimization — preserves all content and text selectability. May not reduce size on already-optimized PDFs.</div>
+                            <div class="option-description">Quick in-browser compression. May not reduce size on already-optimized PDFs.</div>
                         </div>
                     </label>
                     <label class="radio-option">
                         <input type="radio" name="compressMode" value="server" />
                         <div class="option-label">
                             <div class="option-title">Server (Ghostscript)</div>
-                            <div class="option-description">Server-side compression via Ghostscript. Preserves text selectability while downsampling images. Requires internet connection.</div>
+                            <div class="option-description">Higher compression with image downsampling. Requires internet connection.</div>
                         </div>
                     </label>
                 </div>
             </div>
 
-            <div id="compressPrivacyNotice" class="compress-privacy-notice" style="display:none;">
-                <strong>Privacy Notice:</strong> Server mode sends your PDF to our secure server for compression. Files are processed immediately and deleted — they are never stored. For fully private processing, use Fast (Lossless) mode instead.
-            </div>
+            <div id="compressPrivacyNotice" class="compress-privacy-notice" style="display:none;"></div>
 
             <div id="compressQualityGroup" class="compress-quality-group" style="display:none;">
                 <label style="font-weight:600; margin-bottom:8px; display:block;">Compression Preset:</label>
@@ -1161,21 +1114,21 @@
                         <input type="radio" name="compressPreset" value="best" />
                         <div class="option-label">
                             <div class="option-title">Best Quality</div>
-                            <div class="option-description">Minimal compression — highest visual fidelity (150 DPI)</div>
+                            <div class="option-description">Minimal compression — highest visual fidelity</div>
                         </div>
                     </label>
                     <label class="radio-option selected">
                         <input type="radio" name="compressPreset" value="balanced" checked />
                         <div class="option-label">
                             <div class="option-title">Balanced</div>
-                            <div class="option-description">Good balance of quality and file size (144 DPI)</div>
+                            <div class="option-description">Good balance of quality and file size</div>
                         </div>
                     </label>
                     <label class="radio-option">
                         <input type="radio" name="compressPreset" value="compressed" />
                         <div class="option-label">
                             <div class="option-title">Compressed</div>
-                            <div class="option-description">Maximum size reduction — still readable (36 DPI)</div>
+                            <div class="option-description">Maximum size reduction — still readable</div>
                         </div>
                     </label>
                 </div>
@@ -1205,8 +1158,7 @@
         </div>
 
         <div class="footer">
-            Powered by <a href="https://pdf-lib.js.org/" target="_blank">pdf-lib</a> & <a href="https://mozilla.github.io/pdf.js/" target="_blank">PDF.js</a> •
-            Client-side processing • No data collected
+            CLMC Internal Tool. For Internal Use Only.
         </div>
     </div>
 
