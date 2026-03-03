@@ -13,6 +13,36 @@ const crypto = require('crypto');
 
 const execFileAsync = promisify(execFile);
 
+// --- Rate Limiting / Spike Detection ---
+// In-memory sliding window — resets on cold start, self-heals within seconds under attack
+const REQUEST_LOG = [];          // global timestamps
+const IP_LOG = new Map();        // ip -> [timestamps]
+const GLOBAL_LIMIT = 30;        // max requests per minute across all IPs
+const PER_IP_LIMIT = 5;         // max requests per minute per IP
+const WINDOW_MS = 60 * 1000;    // 1-minute sliding window
+
+function isRateLimited(ip) {
+  const now = Date.now();
+  const cutoff = now - WINDOW_MS;
+
+  // Prune global log
+  while (REQUEST_LOG.length && REQUEST_LOG[0] < cutoff) REQUEST_LOG.shift();
+
+  // Prune per-IP log
+  const ipLog = IP_LOG.get(ip) || [];
+  while (ipLog.length && ipLog[0] < cutoff) ipLog.shift();
+
+  // Check limits
+  if (REQUEST_LOG.length >= GLOBAL_LIMIT) return 'global';
+  if (ipLog.length >= PER_IP_LIMIT) return 'ip';
+
+  // Record this request
+  REQUEST_LOG.push(now);
+  ipLog.push(now);
+  IP_LOG.set(ip, ipLog);
+  return false;
+}
+
 // Ghostscript preset mapping for the three user-facing compression presets
 // best -> /prepress (300 DPI) - Best Quality, minimal compression
 // balanced -> /ebook (150 DPI) - Balanced size/quality
@@ -28,12 +58,20 @@ exports.compressPdf = onRequest(
     cors: true,
     memory: '512MiB',
     timeoutSeconds: 300,
-    region: 'us-central1'
+    region: 'us-central1',
+    maxInstances: 2
   },
   async (req, res) => {
     // Only accept POST requests
     if (req.method !== 'POST') {
       return res.status(405).send('Method Not Allowed');
+    }
+
+    // Spike detection — reject before any file parsing (near-zero cost)
+    const clientIp = req.headers['x-forwarded-for'] || req.ip || 'unknown';
+    const limited = isRateLimited(clientIp);
+    if (limited) {
+      return res.status(429).json({ error: 'Too many requests. Try again in a minute.' });
     }
 
     // Parse multipart form data using busboy
