@@ -20,14 +20,14 @@ Requirements for this milestone — Split PDF and Compress PDF features.
 
 ### Compress PDF
 
-- [ ] **COMP-01**: User can upload one or more PDF files to the Compress tool via click or drag-and-drop
-- [ ] **COMP-02**: User can choose between Fast mode (lossless structural optimization) and Heavy mode (JPEG re-render)
+- [x] **COMP-01**: User can upload one or more PDF files to the Compress tool via click or drag-and-drop
+- [x] **COMP-02**: User can choose between Fast mode (lossless structural optimization) and Heavy mode (JPEG re-render)
 - [ ] **COMP-03**: User sees before/after file size for each compressed PDF
-- [ ] **COMP-04**: In Heavy mode, user can adjust JPEG quality via a slider (50–100%)
-- [ ] **COMP-05**: Heavy mode shows a clear warning that text layer will be destroyed (non-selectable)
+- [x] **COMP-04**: In Heavy mode, user can adjust JPEG quality via a slider (50–100%)
+- [x] **COMP-05**: Heavy mode shows a clear warning that text layer will be destroyed (non-selectable)
 - [ ] **COMP-06**: App shows progress indicator during compression
 - [ ] **COMP-07**: User can download each compressed PDF individually
-- [ ] **COMP-08**: App detects encrypted PDFs and shows a clear error before attempting to process
+- [x] **COMP-08**: App detects encrypted PDFs and shows a clear error before attempting to process
 
 ## v2 Requirements
 
@@ -78,14 +78,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SPLT-06 | Phase 1 - Split PDF | Complete |
 | SPLT-07 | Phase 1 - Split PDF | Complete |
 | SPLT-08 | Phase 1 - Split PDF | Complete |
-| COMP-01 | Phase 2 - Compress PDF | Pending |
-| COMP-02 | Phase 2 - Compress PDF | Pending |
+| COMP-01 | Phase 2 - Compress PDF | Complete |
+| COMP-02 | Phase 2 - Compress PDF | Complete |
 | COMP-03 | Phase 2 - Compress PDF | Pending |
-| COMP-04 | Phase 2 - Compress PDF | Pending |
-| COMP-05 | Phase 2 - Compress PDF | Pending |
+| COMP-04 | Phase 2 - Compress PDF | Complete |
+| COMP-05 | Phase 2 - Compress PDF | Complete |
 | COMP-06 | Phase 2 - Compress PDF | Pending |
 | COMP-07 | Phase 2 - Compress PDF | Pending |
-| COMP-08 | Phase 2 - Compress PDF | Pending |
+| COMP-08 | Phase 2 - Compress PDF | Complete |
 
 **Coverage:**
 - v1 requirements: 16 total

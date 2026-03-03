@@ -42,7 +42,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans:** 2 plans
 
 Plans:
-- [ ] 02-01-PLAN.md -- Foundation + UI: nav button, HTML section, CSS, mode toggle, quality slider, upload handlers, file list
+- [x] 02-01-PLAN.md -- Foundation + UI: nav button, HTML section, CSS, mode toggle, quality slider, upload handlers, file list
 - [ ] 02-02-PLAN.md -- Compression logic + results: Fast/Heavy engines, orchestrator, before/after display, individual download, human verification
 
 ## Progress
@@ -53,7 +53,7 @@ Phases execute in numeric order: 1 → 2
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Split PDF | 3/3 | UAT Complete |  |
-| 2. Compress PDF | 0/2 | Planned | - |
+| 2. Compress PDF | 1/2 | In Progress | - |
 
 ### Phase 3: Split Merge PDFs and PDF to Images into separate nav tabs
 
