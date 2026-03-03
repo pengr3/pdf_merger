@@ -40,8 +40,8 @@ Requirements for this milestone — Split PDF and Compress PDF features.
 
 - [x] **UI-01**: All purple gradient colors (#667eea, #764ba2) replaced with monochrome palette (black/gray/white) throughout the app
 - [x] **UI-02**: Company logo (CLMC 2026 REGISTERED LOGO.png) displayed in navbar at 48px height with "TOOLS" text suffix
-- [ ] **UI-03**: All emojis removed from nav buttons, section headings, privacy badges, upload areas, and reorder hints
-- [ ] **UI-04**: All emoji status indicators in JavaScript replaced with CSS-styled colored dot indicators (green success, red error, yellow warning)
+- [x] **UI-03**: All emojis removed from nav buttons, section headings, privacy badges, upload areas, and reorder hints
+- [x] **UI-04**: All emoji status indicators in JavaScript replaced with CSS-styled colored dot indicators (green success, red error, yellow warning)
 - [x] **UI-05**: Cards and containers use flat design with subtle borders, reduced border-radius (4-8px), and no heavy shadows
 - [x] **UI-06**: Primary buttons use solid black background (#1a1a1a) with dark gray hover state (#444), no gradients or lift effects
 
@@ -123,8 +123,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | NAV-04 | Phase 3 - Nav Tab Separation | Complete |
 | UI-01 | Phase 4 - UI/UX Overhaul | Complete |
 | UI-02 | Phase 4 - UI/UX Overhaul | Complete |
-| UI-03 | Phase 4 - UI/UX Overhaul | Pending |
-| UI-04 | Phase 4 - UI/UX Overhaul | Pending |
+| UI-03 | Phase 4 - UI/UX Overhaul | Complete |
+| UI-04 | Phase 4 - UI/UX Overhaul | Complete |
 | UI-05 | Phase 4 - UI/UX Overhaul | Complete |
 | UI-06 | Phase 4 - UI/UX Overhaul | Complete |
 
