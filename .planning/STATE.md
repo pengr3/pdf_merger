@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-03-03T06:21:44.124Z"
+last_updated: "2026-03-03T06:50:32.135Z"
 progress:
   total_phases: 5
   completed_phases: 2
-  total_plans: 7
-  completed_plans: 8
+  total_plans: 9
+  completed_plans: 9
 ---
 
 ---
@@ -44,16 +44,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-02)
 
 **Core value:** Files never leave the user's device — every PDF operation runs 100% in-browser
-**Current focus:** Phase 02.1 complete — ready for verification
+**Current focus:** Phase 03 Plan 01 complete — Merge PDFs independent nav tab created
 
 ## Current Position
 
-Phase: 02.1 of 4+ (Server-Side PDF Compression via Firebase) — ALL PLANS COMPLETE
-Plan: 2 of 2 complete
-Status: Both plans executed, SUMMARYs created, awaiting verification
-Last activity: 2026-03-03 — Phase 02.1 Plan 02 complete (frontend Server mode integration, end-to-end verified)
+Phase: 03 of 4+ (Split Merge PDFs and PDF to Images into Separate Nav Tabs)
+Plan: 1 of 2 complete
+Status: Plan 01 executed — Merge PDFs tab fully wired; Plan 02 next (PDF to Images JS block)
+Last activity: 2026-03-03 — Phase 03 Plan 01 complete (merge-pdf independent nav tab, html + js split)
 
-Progress: [██████████] 100%
+Progress: [████░░░░░░] 40%
 
 ## Performance Metrics
 
@@ -69,10 +69,11 @@ Progress: [██████████] 100%
 | 01-split-pdf | 2 | 4min | 2min |
 | 02-compress-pdf | 1 | 1min | 1min |
 | 02.1-server-side-pdf-compression-via-firebase | 1 | 1min | 1min |
+| 03-split-merge-pdfs-and-pdf-to-images | 1 | 4min | 4min |
 
 **Recent Trend:**
-- Last 5 plans: 01-split-pdf/01 (2min), 01-split-pdf/02 (2min), 02-compress-pdf/01 (1min), 02.1-01 (1min)
-- Trend: Fast execution, ~1-2min per plan
+- Last 5 plans: 01-split-pdf/01 (2min), 01-split-pdf/02 (2min), 02-compress-pdf/01 (1min), 02.1-01 (1min), 03-01 (4min)
+- Trend: Fast execution, ~1-4min per plan
 
 *Updated after each plan completion*
 
@@ -105,6 +106,9 @@ Recent decisions affecting current work:
 - [Phase 02.1-02]: Size gate at compression time not upload time — allows mode switching after file add
 - [Phase 02.1-02]: No Content-Type header in FormData fetch — browser sets multipart boundary automatically
 - [Phase 02.1-02]: compressPresetValues removed — preset strings sent directly to server, no client-side JPEG quality mapping
+- [Phase 03-01]: Replace single pdf-tools nav button with two separate merge-pdf and pdf-to-images nav buttons
+- [Phase 03-01]: Move shared utilities to own section; Merge PDFs JS block is fully independent with no shared state
+- [Phase 03-01]: submitBtnMerge binds directly to mergePDFs() — no dispatcher function; PDF to Images section is HTML-only placeholder for Plan 02
 
 ### Pending Todos
 
@@ -125,5 +129,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Phase 02.1 complete — all plans executed, pending verification
+Stopped at: Completed 03-01-PLAN.md — Merge PDFs independent nav tab created; ready for 03-02 (PDF to Images JS)
 Resume file: None

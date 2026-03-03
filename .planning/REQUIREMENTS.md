@@ -31,9 +31,9 @@ Requirements for this milestone — Split PDF and Compress PDF features.
 
 ### Nav Tab Separation (Phase 3)
 
-- [ ] **NAV-01**: Merge PDFs has its own independent nav tab with dedicated HTML section, state variables, and upload handlers
+- [x] **NAV-01**: Merge PDFs has its own independent nav tab with dedicated HTML section, state variables, and upload handlers
 - [ ] **NAV-02**: PDF to Images has its own independent nav tab with dedicated HTML section, state variables, and upload handlers
-- [ ] **NAV-03**: Each tool has independent state — switching tabs preserves file selections in each tool
+- [x] **NAV-03**: Each tool has independent state — switching tabs preserves file selections in each tool
 - [ ] **NAV-04**: The old combined pdf-tools section, radio toggle, pdfToolMode variable, and handlePdfToolSubmit dispatcher are fully removed
 
 ### Server-Side Compression (Phase 02.1 — INSERTED)
@@ -108,9 +108,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SCOMP-04 | Phase 02.1 - Server-Side Compression | Complete |
 | SCOMP-05 | Phase 02.1 - Server-Side Compression | Complete |
 | SCOMP-06 | Phase 02.1 - Server-Side Compression | Complete |
-| NAV-01 | Phase 3 - Nav Tab Separation | Pending |
+| NAV-01 | Phase 3 - Nav Tab Separation | Complete |
 | NAV-02 | Phase 3 - Nav Tab Separation | Pending |
-| NAV-03 | Phase 3 - Nav Tab Separation | Pending |
+| NAV-03 | Phase 3 - Nav Tab Separation | Complete |
 | NAV-04 | Phase 3 - Nav Tab Separation | Pending |
 
 **Coverage:**
