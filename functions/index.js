@@ -55,8 +55,8 @@ const GS_PRESETS = {
   },
   balanced: {
     // Target: ~50% file size saving — good balance
-    dpi: 130,
-    qfactor: 0.25
+    dpi: 150,
+    qfactor: 0.15
   },
   compressed: {
     // Target: ~90% file size saving — maximum compression
