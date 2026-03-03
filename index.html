@@ -1308,9 +1308,10 @@
         async function loadSplitPdfThumbnails() {
             const THUMB_WIDTH = 120; // px — target thumbnail width; keep small for performance
 
-            // Reset prior state
+            // Save file ref before clear (drop handler sets splitPdfFile directly)
+            const pendingFile = splitPdfFile || fileInputSplit.files[0];
             clearSplitTool();
-            splitPdfFile = fileInputSplit.files[0] || splitPdfFile; // reattach after clear resets
+            splitPdfFile = pendingFile;
 
             if (!splitPdfFile) return;
 
