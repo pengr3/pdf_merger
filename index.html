@@ -1981,6 +1981,242 @@
             }
         }
 
+        // --- Utility: format bytes for display ---
+        function formatBytes(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+        }
+
+        // --- Utility: convert data URL to Uint8Array for pdf-lib embedJpg ---
+        function dataUrlToUint8Array(dataUrl) {
+            const base64 = dataUrl.split(',')[1];
+            const binaryStr = atob(base64);
+            const bytes = new Uint8Array(binaryStr.length);
+            for (let i = 0; i < binaryStr.length; i++) {
+                bytes[i] = binaryStr.charCodeAt(i);
+            }
+            return bytes;
+        }
+
+        // --- Fast mode compression (COMP-02 Fast) ---
+        async function compressFast(arrayBuffer) {
+            // Load and re-save with useObjectStreams: true (the default)
+            // This normalizes the PDF structure — may modestly reduce size on some PDFs
+            const pdfDoc = await PDFDocument.load(arrayBuffer);
+            return await pdfDoc.save({ useObjectStreams: true });
+            // Returns Uint8Array — byteLength is the "after" size
+        }
+
+        // --- Heavy mode compression (COMP-02 Heavy) ---
+        async function compressFileHeavy(arrayBuffer, quality, onPageProgress) {
+            // quality: 0.50–1.00 (from slider value / 100)
+            // onPageProgress: (pageNum, totalPages) => void — for progress updates
+
+            // Load with PDF.js for rendering
+            const pdfJs = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            const numPages = pdfJs.numPages;
+
+            // Load with pdf-lib to get original page dimensions in PDF points
+            const srcDoc = await PDFDocument.load(arrayBuffer);
+
+            // Create output PDF document
+            const outDoc = await PDFDocument.create();
+
+            for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+                // Render page to canvas at 2x scale for quality (144 DPI equivalent)
+                const page = await pdfJs.getPage(pageNum);
+                const viewport = page.getViewport({ scale: 2 });
+
+                const canvas = document.createElement('canvas');
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                const ctx = canvas.getContext('2d');
+                await page.render({ canvasContext: ctx, viewport }).promise;
+
+                // Export canvas as JPEG with user-selected quality
+                const dataUrl = canvas.toDataURL('image/jpeg', quality);
+                const jpegBytes = dataUrlToUint8Array(dataUrl);
+
+                // Release canvas to allow GC (avoid holding all canvas data in memory)
+                canvas.width = 0;
+                canvas.height = 0;
+
+                // Get original page dimensions in PDF points (NOT canvas pixel dimensions)
+                const srcPage = srcDoc.getPage(pageNum - 1);
+                const { width, height } = srcPage.getSize();
+
+                // Embed JPEG and add a page of matching dimensions
+                const jpgImage = await outDoc.embedJpg(jpegBytes);
+                const outPage = outDoc.addPage([width, height]);
+                outPage.drawImage(jpgImage, {
+                    x: 0,
+                    y: 0,
+                    width: width,
+                    height: height
+                });
+
+                // Report page progress
+                if (onPageProgress) onPageProgress(pageNum, numPages);
+            }
+
+            return await outDoc.save();
+        }
+
+        // --- Compress orchestrator (processes all files) ---
+        async function compressAllFiles() {
+            if (compressFiles.length === 0) return;
+
+            const startTime = Date.now();
+            compressBtnCompress.disabled = true;
+            clearBtnCompress.disabled = true;
+            compressResults = [];
+            compressResultsList.innerHTML = '';
+            showStatus('<div class="spinner"></div> Compressing...', 'loading', 'statusCompress');
+            updateProgress(0, 'progressBarCompress', 'progressFillCompress');
+
+            const totalFiles = compressFiles.length;
+            let processedCount = 0;
+            let successCount = 0;
+
+            try {
+                // Process files sequentially to avoid memory pressure in Heavy mode
+                for (let fileIdx = 0; fileIdx < totalFiles; fileIdx++) {
+                    const file = compressFiles[fileIdx];
+                    const originalSize = file.size;
+
+                    try {
+                        const arrayBuffer = await file.arrayBuffer();
+
+                        // COMP-08: Encrypted PDF detection — skip and continue
+                        if (isEncryptedPdf(arrayBuffer)) {
+                            renderCompressError(file.name, 'Encrypted PDF — cannot process');
+                            processedCount++;
+                            updateProgress((processedCount / totalFiles) * 100, 'progressBarCompress', 'progressFillCompress');
+                            continue;
+                        }
+
+                        let compressedBytes;
+
+                        if (compressMode === 'fast') {
+                            // COMP-02 Fast: pdf-lib load + save
+                            showStatus(`<div class="spinner"></div> Compressing (Fast): ${escapeHtml(file.name)}...`, 'loading', 'statusCompress');
+                            compressedBytes = await compressFast(arrayBuffer);
+                        } else {
+                            // COMP-02 Heavy: JPEG re-render pipeline
+                            const quality = parseInt(compressQualitySlider.value, 10) / 100;
+                            showStatus(`<div class="spinner"></div> Compressing (Heavy): ${escapeHtml(file.name)}...`, 'loading', 'statusCompress');
+                            compressedBytes = await compressFileHeavy(arrayBuffer, quality, (pageNum, numPages) => {
+                                // Progress within this file: allocate proportional slice
+                                const fileSlice = 1 / totalFiles;
+                                const fileBase = fileIdx / totalFiles;
+                                const pageProgress = (pageNum / numPages) * 0.9; // 90% of file slice for pages
+                                updateProgress((fileBase + fileSlice * pageProgress) * 100, 'progressBarCompress', 'progressFillCompress');
+                            });
+                        }
+
+                        // Store result for download button
+                        const resultIndex = compressResults.length;
+                        compressResults.push({
+                            fileName: file.name,
+                            originalSize: originalSize,
+                            compressedBytes: compressedBytes
+                        });
+
+                        // COMP-03: Render before/after result
+                        renderCompressResult(file.name, originalSize, compressedBytes.byteLength, resultIndex);
+                        successCount++;
+
+                    } catch (fileErr) {
+                        renderCompressError(file.name, fileErr.message);
+                        console.error(`Compress error for ${file.name}:`, fileErr);
+                    }
+
+                    processedCount++;
+                    updateProgress((processedCount / totalFiles) * 100, 'progressBarCompress', 'progressFillCompress');
+                }
+
+                const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+                if (successCount > 0) {
+                    showStatus(`✅ Compressed ${successCount} of ${totalFiles} file${totalFiles !== 1 ? 's' : ''} (${elapsed}s).`, 'success', 'statusCompress');
+                } else {
+                    showStatus(`❌ No files could be compressed. Check error messages above.`, 'error', 'statusCompress');
+                }
+
+                setTimeout(() => hideProgress('progressBarCompress', 'progressFillCompress'), 1500);
+
+            } catch (error) {
+                hideProgress('progressBarCompress', 'progressFillCompress');
+                showStatus(`❌ Error: ${error.message}`, 'error', 'statusCompress');
+                console.error('Compress PDF error:', error);
+            } finally {
+                compressBtnCompress.disabled = false;
+                clearBtnCompress.disabled = false;
+            }
+        }
+
+        // --- Render a successful compression result (COMP-03, COMP-07) ---
+        function renderCompressResult(fileName, originalSize, afterSize, resultIndex) {
+            const delta = originalSize - afterSize;
+            const pct = ((delta / originalSize) * 100).toFixed(1);
+            const noReduction = afterSize >= originalSize;
+
+            const resultEl = document.createElement('div');
+            resultEl.className = 'compress-result-item';
+            resultEl.innerHTML = `
+                <div class="compress-result-info">
+                    <div class="compress-result-name">${escapeHtml(fileName)}</div>
+                    <div class="compress-result-sizes">
+                        <span>Before: ${formatBytes(originalSize)}</span>
+                        <span>After: ${formatBytes(afterSize)}</span>
+                        ${noReduction
+                            ? '<span class="compress-no-reduction">Could not reduce further — file is already optimized</span>'
+                            : `<span class="compress-savings">-${pct}% saved</span>`}
+                    </div>
+                </div>
+                <div class="compress-result-actions">
+                    <button class="compress-download-btn" onclick="downloadCompressedPdf(${resultIndex})">Download</button>
+                </div>
+            `;
+            compressResultsList.appendChild(resultEl);
+        }
+
+        // --- Render an error result for a file that could not be compressed ---
+        function renderCompressError(fileName, errorMsg) {
+            const resultEl = document.createElement('div');
+            resultEl.className = 'compress-result-item';
+            resultEl.innerHTML = `
+                <div class="compress-result-info">
+                    <div class="compress-result-name">${escapeHtml(fileName)}</div>
+                    <div class="compress-result-error">❌ ${escapeHtml(errorMsg)}</div>
+                </div>
+            `;
+            compressResultsList.appendChild(resultEl);
+        }
+
+        // --- Individual file download (COMP-07) ---
+        function downloadCompressedPdf(resultIndex) {
+            const result = compressResults[resultIndex];
+            if (!result) return;
+
+            const blob = new Blob([result.compressedBytes], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            // Insert "-compressed" before the .pdf extension
+            a.download = result.fileName.replace(/\.pdf$/i, '-compressed.pdf');
+            document.body.appendChild(a);
+            a.click();
+            URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }
+
+        // Expose globally for onclick in result HTML
+        window.downloadCompressedPdf = downloadCompressedPdf;
+
+        // --- Compress button event listener ---
+        compressBtnCompress.addEventListener('click', compressAllFiles);
+
         function attachPdfDragListeners() {
             const items = fileListPdf.querySelectorAll('.file-item');
 
