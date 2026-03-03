@@ -50,13 +50,13 @@ function isRateLimited(ip) {
 const GS_PRESETS = {
   best: {
     // Target: ~30% file size saving — minimal compression, highest quality
-    dpi: 200,
-    qfactor: 0.15
+    dpi: 150,
+    qfactor: 0.30
   },
   balanced: {
     // Target: ~50% file size saving — good balance
-    dpi: 110,
-    qfactor: 0.40
+    dpi: 130,
+    qfactor: 0.25
   },
   compressed: {
     // Target: ~90% file size saving — maximum compression
