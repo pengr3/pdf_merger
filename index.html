@@ -1204,159 +1204,7 @@
             });
         });
 
-        // ========== PDF TOOLS (UNIFIED) ==========
-        const uploadAreaPdf = document.getElementById('uploadAreaPdf');
-        const fileInputPdf = document.getElementById('fileInputPdf');
-        const fileListPdf = document.getElementById('fileListPdf');
-        const submitBtnPdf = document.getElementById('submitBtnPdf');
-        const clearBtnPdf = document.getElementById('clearBtnPdf');
-        const statusPdf = document.getElementById('statusPdf');
-        const statsPdf = document.getElementById('statsPdf');
-        const progressBarPdf = document.getElementById('progressBarPdf');
-        const progressFillPdf = document.getElementById('progressFillPdf');
-        const reorderHintPdf = document.getElementById('reorderHintPdf');
-        const uploadHintPdf = document.getElementById('uploadHintPdf');
-        const imageGridPdf = document.getElementById('imageGridPdf');
-
-        let selectedPdfFiles = [];
-        let draggedIndex = null;
-        let pdfToolMode = 'merge';
-
-        // Mode selection radio buttons
-        document.querySelectorAll('input[name="pdfToolMode"]').forEach(radio => {
-            radio.addEventListener('change', (e) => {
-                pdfToolMode = e.target.value;
-                updatePdfToolMode();
-            });
-        });
-
-        function updatePdfToolMode() {
-            // Clear files when switching modes
-            selectedPdfFiles = [];
-            fileInputPdf.value = '';
-            imageGridPdf.innerHTML = '';
-            renderPdfFileList();
-
-            if (pdfToolMode === 'merge') {
-                fileInputPdf.multiple = true;
-                uploadHintPdf.textContent = 'Upload 2 or more PDF files (no size limit)';
-                submitBtnPdf.textContent = 'Merge PDFs';
-                imageGridPdf.style.display = 'none';
-            } else {
-                fileInputPdf.multiple = false;
-                uploadHintPdf.textContent = 'Upload a single PDF to convert each page to an image';
-                submitBtnPdf.textContent = 'Convert to Images';
-                imageGridPdf.style.display = 'grid';
-            }
-
-            updatePdfButtons();
-            hideStatus('statusPdf');
-            hidePdfStats();
-        }
-
-        uploadAreaPdf.addEventListener('click', () => fileInputPdf.click());
-
-        uploadAreaPdf.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadAreaPdf.classList.add('dragover');
-        });
-
-        uploadAreaPdf.addEventListener('dragleave', () => {
-            uploadAreaPdf.classList.remove('dragover');
-        });
-
-        uploadAreaPdf.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadAreaPdf.classList.remove('dragover');
-            const files = Array.from(e.dataTransfer.files).filter(f =>
-                f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')
-            );
-            if (files.length === 0) {
-                showStatus('Please drop only PDF files', 'error', 'statusPdf');
-                return;
-            }
-
-            if (pdfToolMode === 'convert') {
-                selectedPdfFiles = [files[0]];
-            } else {
-                selectedPdfFiles = [...selectedPdfFiles, ...files];
-            }
-            renderPdfFileList();
-            updatePdfButtons();
-            hideStatus('statusPdf');
-        });
-
-        fileInputPdf.addEventListener('change', (e) => {
-            if (pdfToolMode === 'convert') {
-                selectedPdfFiles = e.target.files.length > 0 ? [e.target.files[0]] : [];
-            } else {
-                selectedPdfFiles = [...selectedPdfFiles, ...Array.from(e.target.files)];
-            }
-            renderPdfFileList();
-            updatePdfButtons();
-            hideStatus('statusPdf');
-        });
-
-        clearBtnPdf.addEventListener('click', () => {
-            selectedPdfFiles = [];
-            fileInputPdf.value = '';
-            imageGridPdf.innerHTML = '';
-            renderPdfFileList();
-            updatePdfButtons();
-            hideStatus('statusPdf');
-            hidePdfStats();
-        });
-
-        function removePdfFile(index) {
-            selectedPdfFiles.splice(index, 1);
-            renderPdfFileList();
-            updatePdfButtons();
-        }
-
-        function renderPdfFileList() {
-            if (selectedPdfFiles.length === 0) {
-                fileListPdf.innerHTML = '';
-                reorderHintPdf.style.display = 'none';
-                return;
-            }
-
-            const showDragHandle = pdfToolMode === 'merge' && selectedPdfFiles.length >= 2;
-            reorderHintPdf.style.display = showDragHandle ? 'block' : 'none';
-
-            fileListPdf.innerHTML = selectedPdfFiles.map((file, index) => `
-                <div class="file-item" ${showDragHandle ? 'draggable="true"' : ''} data-index="${index}">
-                    <div class="file-info">
-                        ${showDragHandle ? '<span class="drag-handle">⋮⋮</span>' : ''}
-                        <div class="file-order">${index + 1}</div>
-                        <div class="file-content">
-                            <div class="file-name">${escapeHtml(file.name)}</div>
-                            <div class="file-details">
-                                <span>📄 ${(file.size / 1024 / 1024).toFixed(2)} MB</span>
-                                <span>📅 ${new Date(file.lastModified).toLocaleDateString()}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <button class="remove-btn" onclick="removePdfFile(${index})">Remove</button>
-                </div>
-            `).join('');
-
-            if (showDragHandle) {
-                attachPdfDragListeners();
-            }
-        }
-
-        function updatePdfButtons() {
-            let hasValidFiles = false;
-
-            if (pdfToolMode === 'merge') {
-                hasValidFiles = selectedPdfFiles.length >= 2;
-            } else {
-                hasValidFiles = selectedPdfFiles.length === 1;
-            }
-
-            submitBtnPdf.disabled = !hasValidFiles;
-            clearBtnPdf.disabled = selectedPdfFiles.length === 0;
-        }
+        // ========== SHARED UTILITIES ==========
 
         function showStatus(message, type, statusId) {
             const statusEl = document.getElementById(statusId);
@@ -1369,8 +1217,126 @@
             document.getElementById(statusId).style.display = 'none';
         }
 
-        function showPdfStats(data) {
-            statsPdf.innerHTML = `
+        function updateProgress(percent, barId, fillId) {
+            document.getElementById(barId).style.display = 'block';
+            document.getElementById(fillId).style.width = percent + '%';
+        }
+
+        function hideProgress(barId, fillId) {
+            document.getElementById(barId).style.display = 'none';
+            document.getElementById(fillId).style.width = '0%';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ========== MERGE PDFs SECTION ==========
+
+        // --- State ---
+        let mergeFiles = [];
+        let mergeDraggedIndex = null;
+
+        // --- DOM references ---
+        const uploadAreaMerge = document.getElementById('uploadAreaMerge');
+        const fileInputMerge = document.getElementById('fileInputMerge');
+        const fileListMerge = document.getElementById('fileListMerge');
+        const submitBtnMerge = document.getElementById('submitBtnMerge');
+        const clearBtnMerge = document.getElementById('clearBtnMerge');
+        const reorderHintMerge = document.getElementById('reorderHintMerge');
+        const statsMerge = document.getElementById('statsMerge');
+
+        // --- Upload handlers ---
+        uploadAreaMerge.addEventListener('click', () => fileInputMerge.click());
+
+        uploadAreaMerge.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadAreaMerge.classList.add('dragover');
+        });
+
+        uploadAreaMerge.addEventListener('dragleave', () => {
+            uploadAreaMerge.classList.remove('dragover');
+        });
+
+        uploadAreaMerge.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadAreaMerge.classList.remove('dragover');
+            const files = Array.from(e.dataTransfer.files).filter(f =>
+                f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')
+            );
+            if (files.length === 0) {
+                showStatus('Please drop only PDF files', 'error', 'statusMerge');
+                return;
+            }
+            mergeFiles = [...mergeFiles, ...files];
+            renderMergeFileList();
+            updateMergeButtons();
+            hideStatus('statusMerge');
+        });
+
+        fileInputMerge.addEventListener('change', (e) => {
+            mergeFiles = [...mergeFiles, ...Array.from(e.target.files)];
+            renderMergeFileList();
+            updateMergeButtons();
+            hideStatus('statusMerge');
+        });
+
+        clearBtnMerge.addEventListener('click', () => {
+            mergeFiles = [];
+            fileInputMerge.value = '';
+            renderMergeFileList();
+            updateMergeButtons();
+            hideStatus('statusMerge');
+            hideMergeStats();
+        });
+
+        function removeMergeFile(index) {
+            mergeFiles.splice(index, 1);
+            renderMergeFileList();
+            updateMergeButtons();
+        }
+
+        function renderMergeFileList() {
+            if (mergeFiles.length === 0) {
+                fileListMerge.innerHTML = '';
+                reorderHintMerge.style.display = 'none';
+                return;
+            }
+
+            const showDragHandle = mergeFiles.length >= 2;
+            reorderHintMerge.style.display = showDragHandle ? 'block' : 'none';
+
+            fileListMerge.innerHTML = mergeFiles.map((file, index) => `
+                <div class="file-item" ${showDragHandle ? 'draggable="true"' : ''} data-index="${index}">
+                    <div class="file-info">
+                        ${showDragHandle ? '<span class="drag-handle">⋮⋮</span>' : ''}
+                        <div class="file-order">${index + 1}</div>
+                        <div class="file-content">
+                            <div class="file-name">${escapeHtml(file.name)}</div>
+                            <div class="file-details">
+                                <span>📄 ${(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                                <span>📅 ${new Date(file.lastModified).toLocaleDateString()}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="remove-btn" onclick="removeMergeFile(${index})">Remove</button>
+                </div>
+            `).join('');
+
+            if (showDragHandle) {
+                attachMergeDragListeners();
+            }
+        }
+
+        function updateMergeButtons() {
+            submitBtnMerge.disabled = mergeFiles.length < 2;
+            clearBtnMerge.disabled = mergeFiles.length === 0;
+        }
+
+        function showMergeStats(data) {
+            statsMerge.innerHTML = `
                 <div class="stats-row">
                     <span class="stats-label">Files Merged:</span>
                     <span>${data.filesProcessed}</span>
@@ -1388,27 +1354,11 @@
                     <span>${data.processingTime}</span>
                 </div>
             `;
-            statsPdf.style.display = 'block';
+            statsMerge.style.display = 'block';
         }
 
-        function hidePdfStats() {
-            statsPdf.style.display = 'none';
-        }
-
-        function updateProgress(percent, barId, fillId) {
-            document.getElementById(barId).style.display = 'block';
-            document.getElementById(fillId).style.width = percent + '%';
-        }
-
-        function hideProgress(barId, fillId) {
-            document.getElementById(barId).style.display = 'none';
-            document.getElementById(fillId).style.width = '0%';
-        }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
+        function hideMergeStats() {
+            statsMerge.style.display = 'none';
         }
 
         // ========== SPLIT PDF UTILITIES ==========
@@ -2213,83 +2163,85 @@
         // --- Compress button event listener ---
         compressBtnCompress.addEventListener('click', compressAllFiles);
 
-        function attachPdfDragListeners() {
-            const items = fileListPdf.querySelectorAll('.file-item');
+        // --- Drag-and-drop handlers ---
+        function attachMergeDragListeners() {
+            const items = fileListMerge.querySelectorAll('.file-item');
 
             items.forEach(item => {
-                item.addEventListener('dragstart', handlePdfDragStart);
-                item.addEventListener('dragend', handlePdfDragEnd);
-                item.addEventListener('dragover', handlePdfDragOver);
-                item.addEventListener('drop', handlePdfDrop);
-                item.addEventListener('dragleave', handlePdfDragLeave);
+                item.addEventListener('dragstart', handleMergeDragStart);
+                item.addEventListener('dragend', handleMergeDragEnd);
+                item.addEventListener('dragover', handleMergeDragOver);
+                item.addEventListener('drop', handleMergeDrop);
+                item.addEventListener('dragleave', handleMergeDragLeave);
             });
         }
 
-        function handlePdfDragStart(e) {
-            draggedIndex = parseInt(e.currentTarget.dataset.index);
+        function handleMergeDragStart(e) {
+            mergeDraggedIndex = parseInt(e.currentTarget.dataset.index);
             e.currentTarget.classList.add('dragging');
             e.dataTransfer.effectAllowed = 'move';
         }
 
-        function handlePdfDragEnd(e) {
+        function handleMergeDragEnd(e) {
             e.currentTarget.classList.remove('dragging');
-            fileListPdf.querySelectorAll('.file-item').forEach(item => {
+            fileListMerge.querySelectorAll('.file-item').forEach(item => {
                 item.classList.remove('drag-over');
             });
         }
 
-        function handlePdfDragOver(e) {
+        function handleMergeDragOver(e) {
             e.preventDefault();
             e.dataTransfer.dropEffect = 'move';
 
             const currentIndex = parseInt(e.currentTarget.dataset.index);
-            if (currentIndex !== draggedIndex) {
+            if (currentIndex !== mergeDraggedIndex) {
                 e.currentTarget.classList.add('drag-over');
             }
         }
 
-        function handlePdfDragLeave(e) {
+        function handleMergeDragLeave(e) {
             e.currentTarget.classList.remove('drag-over');
         }
 
-        function handlePdfDrop(e) {
+        function handleMergeDrop(e) {
             e.preventDefault();
             e.currentTarget.classList.remove('drag-over');
 
             const dropIndex = parseInt(e.currentTarget.dataset.index);
 
-            if (draggedIndex !== null && draggedIndex !== dropIndex) {
-                const draggedFile = selectedPdfFiles[draggedIndex];
-                selectedPdfFiles.splice(draggedIndex, 1);
-                selectedPdfFiles.splice(dropIndex, 0, draggedFile);
-                renderPdfFileList();
+            if (mergeDraggedIndex !== null && mergeDraggedIndex !== dropIndex) {
+                const draggedFile = mergeFiles[mergeDraggedIndex];
+                mergeFiles.splice(mergeDraggedIndex, 1);
+                mergeFiles.splice(dropIndex, 0, draggedFile);
+                renderMergeFileList();
             }
 
-            draggedIndex = null;
+            mergeDraggedIndex = null;
         }
 
+        // --- mergePDFs ---
         async function mergePDFs() {
-            if (selectedPdfFiles.length < 2) {
-                showStatus('Please upload at least 2 PDF files', 'error', 'statusPdf');
+            if (mergeFiles.length < 2) {
+                showStatus('Please upload at least 2 PDF files', 'error', 'statusMerge');
                 return;
             }
 
             const startTime = Date.now();
-            submitBtnPdf.disabled = true;
-            clearBtnPdf.disabled = true;
+            submitBtnMerge.disabled = true;
+            clearBtnMerge.disabled = true;
 
-            showStatus('<div class="spinner"></div> Merging PDFs...', 'loading', 'statusPdf');
-            updateProgress(0, 'progressBarPdf', 'progressFillPdf');
+            showStatus('<div class="spinner"></div> Merging PDFs...', 'loading', 'statusMerge');
+            updateProgress(0, 'progressBarMerge', 'progressFillMerge');
 
             try {
                 const mergedPdf = await PDFDocument.create();
-                updateProgress(10, 'progressBarPdf', 'progressFillPdf');
+                updateProgress(10, 'progressBarMerge', 'progressFillMerge');
 
                 let processedCount = 0;
                 let totalPages = 0;
 
-                for (let i = 0; i < selectedPdfFiles.length; i++) {
-                    const file = selectedPdfFiles[i];
+                for (let i = 0; i < mergeFiles.length; i++) {
+                    const file = mergeFiles[i];
 
                     try {
                         const arrayBuffer = await file.arrayBuffer();
@@ -2302,19 +2254,19 @@
                         });
 
                         processedCount++;
-                        const progress = 10 + (i + 1) / selectedPdfFiles.length * 80;
-                        updateProgress(progress, 'progressBarPdf', 'progressFillPdf');
+                        const progress = 10 + (i + 1) / mergeFiles.length * 80;
+                        updateProgress(progress, 'progressBarMerge', 'progressFillMerge');
 
                     } catch (error) {
                         throw new Error(`Failed to process "${file.name}": ${error.message}`);
                     }
                 }
 
-                showStatus('<div class="spinner"></div> Saving merged PDF...', 'loading', 'statusPdf');
-                updateProgress(95, 'progressBarPdf', 'progressFillPdf');
+                showStatus('<div class="spinner"></div> Saving merged PDF...', 'loading', 'statusMerge');
+                updateProgress(95, 'progressBarMerge', 'progressFillMerge');
 
                 const mergedPdfBytes = await mergedPdf.save();
-                updateProgress(100, 'progressBarPdf', 'progressFillPdf');
+                updateProgress(100, 'progressBarMerge', 'progressFillMerge');
 
                 const processingTime = ((Date.now() - startTime) / 1000).toFixed(2) + 's';
 
@@ -2328,9 +2280,9 @@
                 URL.revokeObjectURL(url);
                 document.body.removeChild(a);
 
-                showStatus('✅ PDF merged successfully! Download started.', 'success', 'statusPdf');
+                showStatus('✅ PDF merged successfully! Download started.', 'success', 'statusMerge');
 
-                showPdfStats({
+                showMergeStats({
                     filesProcessed: processedCount,
                     totalPages: totalPages,
                     fileSizeMB: (mergedPdfBytes.length / 1024 / 1024).toFixed(2),
@@ -2338,106 +2290,25 @@
                 });
 
                 setTimeout(() => {
-                    hideProgress('progressBarPdf', 'progressFillPdf');
+                    hideProgress('progressBarMerge', 'progressFillMerge');
                 }, 1000);
 
             } catch (error) {
-                hideProgress('progressBarPdf', 'progressFillPdf');
-                showStatus(`❌ Error: ${error.message}`, 'error', 'statusPdf');
+                hideProgress('progressBarMerge', 'progressFillMerge');
+                showStatus(`❌ Error: ${error.message}`, 'error', 'statusMerge');
                 console.error('PDF merge error:', error);
             } finally {
-                submitBtnPdf.disabled = false;
-                clearBtnPdf.disabled = false;
+                submitBtnMerge.disabled = false;
+                clearBtnMerge.disabled = false;
             }
         }
 
-        async function convertPdfToImages() {
-            if (selectedPdfFiles.length === 0) {
-                showStatus('Please upload a PDF file', 'error', 'statusPdf');
-                return;
-            }
+        // --- Event listeners + globals ---
+        submitBtnMerge.addEventListener('click', mergePDFs);
+        window.removeMergeFile = removeMergeFile;
 
-            submitBtnPdf.disabled = true;
-            clearBtnPdf.disabled = true;
-            imageGridPdf.innerHTML = '';
-
-            showStatus('<div class="spinner"></div> Converting PDF to images...', 'loading', 'statusPdf');
-            updateProgress(0, 'progressBarPdf', 'progressFillPdf');
-
-            try {
-                const arrayBuffer = await selectedPdfFiles[0].arrayBuffer();
-                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-                const numPages = pdf.numPages;
-
-                const images = [];
-
-                for (let pageNum = 1; pageNum <= numPages; pageNum++) {
-                    const page = await pdf.getPage(pageNum);
-                    const viewport = page.getViewport({ scale: 2.0 });
-
-                    const canvas = document.createElement('canvas');
-                    const context = canvas.getContext('2d');
-                    canvas.width = viewport.width;
-                    canvas.height = viewport.height;
-
-                    await page.render({
-                        canvasContext: context,
-                        viewport: viewport
-                    }).promise;
-
-                    const imageDataUrl = canvas.toDataURL('image/png');
-                    images.push({ pageNum, dataUrl: imageDataUrl });
-
-                    const progress = (pageNum / numPages) * 100;
-                    updateProgress(progress, 'progressBarPdf', 'progressFillPdf');
-                }
-
-                imageGridPdf.innerHTML = images.map(img => `
-                    <div class="image-item">
-                        <img src="${img.dataUrl}" alt="Page ${img.pageNum}" />
-                        <div style="font-size: 12px; color: #666; margin-bottom: 8px;">Page ${img.pageNum}</div>
-                        <button class="download-btn" onclick="downloadImage('${img.dataUrl}', 'page-${img.pageNum}.png')">
-                            Download
-                        </button>
-                    </div>
-                `).join('');
-
-                showStatus(`✅ Successfully converted ${numPages} pages to images!`, 'success', 'statusPdf');
-
-                setTimeout(() => {
-                    hideProgress('progressBarPdf', 'progressFillPdf');
-                }, 1000);
-
-            } catch (error) {
-                hideProgress('progressBarPdf', 'progressFillPdf');
-                showStatus(`❌ Error: ${error.message}`, 'error', 'statusPdf');
-                console.error('PDF to images error:', error);
-            } finally {
-                submitBtnPdf.disabled = false;
-                clearBtnPdf.disabled = false;
-            }
-        }
-
-        function downloadImage(dataUrl, filename) {
-            const a = document.createElement('a');
-            a.href = dataUrl;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        }
-
-        function handlePdfToolSubmit() {
-            if (pdfToolMode === 'merge') {
-                mergePDFs();
-            } else {
-                convertPdfToImages();
-            }
-        }
-
-        submitBtnPdf.addEventListener('click', handlePdfToolSubmit);
-        window.removePdfFile = removePdfFile;
-        window.downloadImage = downloadImage;
+        // ========== PDF TO IMAGES SECTION ==========
+        // TODO: Plan 02 will create this block
 
         // ========== WATERMARK INSERTER ==========
         const uploadAreaWatermark = document.getElementById('uploadAreaWatermark');
@@ -2829,7 +2700,7 @@
 
         // Prevent accidental page navigation
         window.addEventListener('beforeunload', (e) => {
-            if (selectedPdfFiles.length > 0 || watermarkFiles.length > 0 || splitPdfFile !== null || compressFiles.length > 0) {
+            if (mergeFiles.length > 0 || watermarkFiles.length > 0 || splitPdfFile !== null || compressFiles.length > 0) {
                 e.preventDefault();
                 e.returnValue = '';
             }
