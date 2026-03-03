@@ -50,3 +50,23 @@ Phases execute in numeric order: 1 → 2
 |-------|----------------|--------|-----------|
 | 1. Split PDF | 2/3 | In Progress|  |
 | 2. Compress PDF | 0/TBD | Not started | - |
+
+### Phase 3: Split Merge PDFs and PDF to Images into separate nav tabs
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 2
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 3 to break down)
+
+### Phase 4: UI/UX overhaul — replace gradient color scheme, remove emojis, add company logo, overall polish
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 3
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 4 to break down)

@@ -5,7 +5,7 @@ milestone_name: milestone
 status: in_progress
 last_updated: "2026-03-03T00:00:00Z"
 progress:
-  total_phases: 2
+  total_phases: 4
   completed_phases: 0
   total_plans: 6
   completed_plans: 3
@@ -22,7 +22,7 @@ See: .planning/PROJECT.md (updated 2026-03-02)
 
 ## Current Position
 
-Phase: 1 of 2 (Split PDF)
+Phase: 1 of 4 (Split PDF)
 Plan: 3 of 3 in current phase — ALL COMPLETE
 Status: UAT passed (12/13 pass, 1 skipped, 1 bug fixed during UAT)
 Last activity: 2026-03-03 — UAT complete, 1 drag-and-drop bug fixed
@@ -69,6 +69,11 @@ Recent decisions affecting current work:
 ### Pending Todos
 
 - Enhancement: Add toggle for "Extract Selected" — group into one PDF vs. individual PDFs (requested during UAT)
+
+### Roadmap Evolution
+
+- Phase 3 added: Split Merge PDFs and PDF to Images into separate nav tabs
+- Phase 4 added: UI/UX overhaul — replace gradient color scheme, remove emojis, add company logo, overall polish
 
 ### Blockers/Concerns
 
