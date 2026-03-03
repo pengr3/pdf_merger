@@ -82,7 +82,7 @@ Plans:
   2. PDF to Images has its own nav tab with single-file upload and page-to-image conversion
   3. Each tool's file state persists independently when switching tabs
   4. The old combined pdf-tools section, radio toggle, and mode dispatcher are fully removed
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
 - [ ] 03-01-PLAN.md -- HTML refactoring (nav buttons + both sections) + Merge PDF JS block with independent state and handlers

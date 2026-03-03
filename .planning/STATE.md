@@ -3,6 +3,19 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
+last_updated: "2026-03-03T06:55:30.626Z"
+progress:
+  total_phases: 5
+  completed_phases: 3
+  total_plans: 9
+  completed_plans: 10
+---
+
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
+status: unknown
 last_updated: "2026-03-03T06:50:32.135Z"
 progress:
   total_phases: 5
@@ -109,6 +122,8 @@ Recent decisions affecting current work:
 - [Phase 03-01]: Replace single pdf-tools nav button with two separate merge-pdf and pdf-to-images nav buttons
 - [Phase 03-01]: Move shared utilities to own section; Merge PDFs JS block is fully independent with no shared state
 - [Phase 03-01]: submitBtnMerge binds directly to mergePDFs() — no dispatcher function; PDF to Images section is HTML-only placeholder for Plan 02
+- [Phase 03-02]: imagePdfFile is a single File (not array) — PDF to Images only needs one file at a time
+- [Phase 03-02]: downloadImage() and removeImageFile() exposed on window for inline onclick in template literals
 
 ### Pending Todos
 
