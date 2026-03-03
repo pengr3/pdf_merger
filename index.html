@@ -722,14 +722,14 @@
         }
 
         /* ===== COMPRESS PDF ===== */
-        .compress-heavy-warning {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
+        .compress-privacy-notice {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
             border-radius: 8px;
             padding: 12px 16px;
             margin-top: 15px;
             font-size: 14px;
-            color: #991b1b;
+            color: #1e40af;
         }
 
         .compress-quality-group {
@@ -1082,10 +1082,10 @@
         <!-- COMPRESS PDF SECTION -->
         <div id="compress-pdf" class="tool-section">
             <h1>📦 Compress PDF</h1>
-            <p class="subtitle">Reduce PDF file size with Fast or Heavy compression</p>
+            <p class="subtitle">Reduce PDF file size with Fast or Server compression</p>
 
             <div class="privacy-badge">
-                🔒 <strong>100% Private</strong> - All processing happens in your browser. No files are uploaded to any server.
+                🔒 <strong>Privacy First</strong> - Fast mode processes entirely in your browser. Server mode sends files to our secure server for processing.
             </div>
 
             <div class="options-group">
@@ -1099,17 +1099,17 @@
                         </div>
                     </label>
                     <label class="radio-option">
-                        <input type="radio" name="compressMode" value="heavy" />
+                        <input type="radio" name="compressMode" value="server" />
                         <div class="option-label">
-                            <div class="option-title">Heavy (JPEG Re-render)</div>
-                            <div class="option-description">Re-renders each page as a JPEG image for maximum size reduction. Text will no longer be selectable.</div>
+                            <div class="option-title">Server (Ghostscript)</div>
+                            <div class="option-description">Server-side compression via Ghostscript. Preserves text selectability while downsampling images. Requires internet connection.</div>
                         </div>
                     </label>
                 </div>
             </div>
 
-            <div id="compressHeavyWarning" class="compress-heavy-warning" style="display:none;">
-                <strong>Warning:</strong> Heavy mode destroys the text layer. Text in the output PDF will not be selectable or searchable. This is irreversible.
+            <div id="compressPrivacyNotice" class="compress-privacy-notice" style="display:none;">
+                <strong>Privacy Notice:</strong> Server mode sends your PDF to our secure server for compression. Files are processed immediately and deleted — they are never stored. For fully private processing, use Fast (Lossless) mode instead.
             </div>
 
             <div id="compressQualityGroup" class="compress-quality-group" style="display:none;">
@@ -1119,21 +1119,21 @@
                         <input type="radio" name="compressPreset" value="best" />
                         <div class="option-label">
                             <div class="option-title">Best Quality</div>
-                            <div class="option-description">Minimal compression — highest visual fidelity</div>
+                            <div class="option-description">Minimal compression — highest visual fidelity (300 DPI)</div>
                         </div>
                     </label>
                     <label class="radio-option selected">
                         <input type="radio" name="compressPreset" value="balanced" checked />
                         <div class="option-label">
                             <div class="option-title">Balanced</div>
-                            <div class="option-description">Good balance of quality and file size</div>
+                            <div class="option-description">Good balance of quality and file size (150 DPI)</div>
                         </div>
                     </label>
                     <label class="radio-option">
                         <input type="radio" name="compressPreset" value="compressed" />
                         <div class="option-label">
                             <div class="option-title">Compressed</div>
-                            <div class="option-description">Maximum size reduction — still readable</div>
+                            <div class="option-description">Maximum size reduction — still readable (72 DPI)</div>
                         </div>
                     </label>
                 </div>
@@ -1852,9 +1852,11 @@
 
         // ========== COMPRESS PDF SECTION ==========
 
+        const COMPRESS_PDF_ENDPOINT = 'https://us-central1-clmc-tools.cloudfunctions.net/compressPdf';
+
         // --- State ---
         let compressFiles = [];         // Array of File objects uploaded by user
-        let compressMode = 'fast';      // 'fast' | 'heavy'
+        let compressMode = 'fast';      // 'fast' | 'server'
         let compressResults = [];       // [{fileName, originalSize, compressedBytes}] — stored for download buttons
 
         // --- DOM references ---
@@ -1864,9 +1866,8 @@
         const compressActions = document.getElementById('compressActions');
         const clearBtnCompress = document.getElementById('clearBtnCompress');
         const compressBtnCompress = document.getElementById('compressBtnCompress');
-        const compressHeavyWarning = document.getElementById('compressHeavyWarning');
+        const compressPrivacyNotice = document.getElementById('compressPrivacyNotice');
         const compressQualityGroup = document.getElementById('compressQualityGroup');
-        const compressPresetValues = { best: 0.92, balanced: 0.75, compressed: 0.55 };
         let compressPreset = 'balanced';
         const compressResultsList = document.getElementById('compressResultsList');
 
@@ -1875,9 +1876,9 @@
         document.querySelectorAll('input[name="compressMode"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 compressMode = e.target.value;
-                const isHeavy = compressMode === 'heavy';
-                compressHeavyWarning.style.display = isHeavy ? 'block' : 'none';
-                compressQualityGroup.style.display = isHeavy ? 'block' : 'none';
+                const isServer = compressMode === 'server';
+                compressPrivacyNotice.style.display = isServer ? 'block' : 'none';
+                compressQualityGroup.style.display = isServer ? 'block' : 'none';
 
                 // Update selected class on radio-option labels (visual toggle)
                 document.querySelectorAll('input[name="compressMode"]').forEach(r => {
@@ -1987,7 +1988,7 @@
             compressResultsList.innerHTML = '';
             compressActions.style.display = 'none';
             compressBtnCompress.disabled = true;
-            compressHeavyWarning.style.display = 'none';
+            compressPrivacyNotice.style.display = 'none';
             compressQualityGroup.style.display = 'none';
             compressPreset = 'balanced';
             const balancedRadio = document.querySelector('input[name="compressPreset"][value="balanced"]');
@@ -2016,17 +2017,6 @@
             return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
         }
 
-        // --- Utility: convert data URL to Uint8Array for pdf-lib embedJpg ---
-        function dataUrlToUint8Array(dataUrl) {
-            const base64 = dataUrl.split(',')[1];
-            const binaryStr = atob(base64);
-            const bytes = new Uint8Array(binaryStr.length);
-            for (let i = 0; i < binaryStr.length; i++) {
-                bytes[i] = binaryStr.charCodeAt(i);
-            }
-            return bytes;
-        }
-
         // --- Fast mode compression (COMP-02 Fast) ---
         async function compressFast(arrayBuffer) {
             // Load and re-save with useObjectStreams: true (the default)
@@ -2036,62 +2026,29 @@
             // Returns Uint8Array — byteLength is the "after" size
         }
 
-        // --- Heavy mode compression (COMP-02 Heavy) ---
-        async function compressFileHeavy(arrayBuffer, quality, onPageProgress) {
-            // quality: 0.50–1.00 (from slider value / 100)
-            // onPageProgress: (pageNum, totalPages) => void — for progress updates
+        // --- Server mode compression (COMP-02 Server) ---
+        async function compressFileServer(file, preset) {
+            const formData = new FormData();
+            formData.append('pdf', file);
+            formData.append('preset', preset);
 
-            // Copy buffer before PDF.js consumes it (getDocument transfers ownership, detaching the original)
-            const bufferCopy = arrayBuffer.slice(0);
+            const response = await fetch(COMPRESS_PDF_ENDPOINT, {
+                method: 'POST',
+                body: formData
+                // CRITICAL: Do NOT set Content-Type header — browser must set boundary automatically
+            });
 
-            // Load with PDF.js for rendering
-            const pdfJs = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-            const numPages = pdfJs.numPages;
-
-            // Load with pdf-lib to get original page dimensions in PDF points
-            const srcDoc = await PDFDocument.load(bufferCopy);
-
-            // Create output PDF document
-            const outDoc = await PDFDocument.create();
-
-            for (let pageNum = 1; pageNum <= numPages; pageNum++) {
-                // Render page to canvas at 2x scale for quality (144 DPI equivalent)
-                const page = await pdfJs.getPage(pageNum);
-                const viewport = page.getViewport({ scale: 2 });
-
-                const canvas = document.createElement('canvas');
-                canvas.width = viewport.width;
-                canvas.height = viewport.height;
-                const ctx = canvas.getContext('2d');
-                await page.render({ canvasContext: ctx, viewport }).promise;
-
-                // Export canvas as JPEG with user-selected quality
-                const dataUrl = canvas.toDataURL('image/jpeg', quality);
-                const jpegBytes = dataUrlToUint8Array(dataUrl);
-
-                // Release canvas to allow GC (avoid holding all canvas data in memory)
-                canvas.width = 0;
-                canvas.height = 0;
-
-                // Get original page dimensions in PDF points (NOT canvas pixel dimensions)
-                const srcPage = srcDoc.getPage(pageNum - 1);
-                const { width, height } = srcPage.getSize();
-
-                // Embed JPEG and add a page of matching dimensions
-                const jpgImage = await outDoc.embedJpg(jpegBytes);
-                const outPage = outDoc.addPage([width, height]);
-                outPage.drawImage(jpgImage, {
-                    x: 0,
-                    y: 0,
-                    width: width,
-                    height: height
-                });
-
-                // Report page progress
-                if (onPageProgress) onPageProgress(pageNum, numPages);
+            if (!response.ok) {
+                let errorMsg = 'Server error: ' + response.status;
+                try {
+                    const errBody = await response.json();
+                    errorMsg = errBody.error || errorMsg;
+                } catch (_) {}
+                throw new Error(errorMsg);
             }
 
-            return await outDoc.save();
+            const arrayBuffer = await response.arrayBuffer();
+            return new Uint8Array(arrayBuffer);
         }
 
         // --- Compress orchestrator (processes all files) ---
@@ -2134,16 +2091,15 @@
                             showStatus(`<div class="spinner"></div> Compressing (Fast): ${escapeHtml(file.name)}...`, 'loading', 'statusCompress');
                             compressedBytes = await compressFast(arrayBuffer);
                         } else {
-                            // COMP-02 Heavy: JPEG re-render pipeline
-                            const quality = compressPresetValues[compressPreset];
-                            showStatus(`<div class="spinner"></div> Compressing (Heavy): ${escapeHtml(file.name)}...`, 'loading', 'statusCompress');
-                            compressedBytes = await compressFileHeavy(arrayBuffer, quality, (pageNum, numPages) => {
-                                // Progress within this file: allocate proportional slice
-                                const fileSlice = 1 / totalFiles;
-                                const fileBase = fileIdx / totalFiles;
-                                const pageProgress = (pageNum / numPages) * 0.9; // 90% of file slice for pages
-                                updateProgress((fileBase + fileSlice * pageProgress) * 100, 'progressBarCompress', 'progressFillCompress');
-                            });
+                            // Server mode: send to Firebase Cloud Function
+                            if (file.size > 32 * 1024 * 1024) {
+                                renderCompressError(file.name, 'File exceeds 32 MB server mode limit. Use Fast mode for large files.');
+                                processedCount++;
+                                updateProgress((processedCount / totalFiles) * 100, 'progressBarCompress', 'progressFillCompress');
+                                continue;
+                            }
+                            showStatus(`<div class="spinner"></div> Compressing (Server): ${escapeHtml(file.name)}...`, 'loading', 'statusCompress');
+                            compressedBytes = await compressFileServer(file, compressPreset);
                         }
 
                         // Store result for download button
