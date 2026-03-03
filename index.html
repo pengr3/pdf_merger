@@ -1349,8 +1349,8 @@
                         <div class="file-content">
                             <div class="file-name">${escapeHtml(file.name)}</div>
                             <div class="file-details">
-                                <span>📄 ${(file.size / 1024 / 1024).toFixed(2)} MB</span>
-                                <span>📅 ${new Date(file.lastModified).toLocaleDateString()}</span>
+                                <span>${(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                                <span>${new Date(file.lastModified).toLocaleDateString()}</span>
                             </div>
                         </div>
                     </div>
@@ -1551,7 +1551,7 @@
             // File size gate — must check before reading (SPLT concern from STATE.md)
             const fileSizeMB = splitPdfFile.size / (1024 * 1024);
             if (fileSizeMB > 80) {
-                showStatus('❌ File too large (max 80 MB). Please use a smaller PDF.', 'error', 'statusSplit');
+                showStatus('<span class="status-icon status-error"></span> File too large (max 80 MB). Please use a smaller PDF.', 'error', 'statusSplit');
                 splitPdfFile = null;
                 return;
             }
@@ -1565,13 +1565,13 @@
                 // SPLT-07: Encrypted PDF detection — before PDFDocument.load()
                 if (isEncryptedPdf(arrayBuffer)) {
                     hideProgress('progressBarSplit', 'progressFillSplit');
-                    showStatus('❌ This PDF is encrypted and cannot be split. Please use an unencrypted PDF.', 'error', 'statusSplit');
+                    showStatus('<span class="status-icon status-error"></span> This PDF is encrypted and cannot be split. Please use an unencrypted PDF.', 'error', 'statusSplit');
                     splitPdfFile = null;
                     return;
                 }
 
                 if (fileSizeMB > 30) {
-                    showStatus('⚠️ Large file — processing may take a moment.', 'loading', 'statusSplit');
+                    showStatus('<span class="status-icon status-warning"></span> Large file — processing may take a moment.', 'loading', 'statusSplit');
                 }
 
                 // Load with pdf-lib for later use in splitPdf()
@@ -1580,7 +1580,7 @@
                     splitPdfDoc = await PDFDocument.load(arrayBuffer);
                 } catch (loadErr) {
                     hideProgress('progressBarSplit', 'progressFillSplit');
-                    showStatus('❌ Could not load this PDF. It may be encrypted or corrupted.', 'error', 'statusSplit');
+                    showStatus('<span class="status-icon status-error"></span> Could not load this PDF. It may be encrypted or corrupted.', 'error', 'statusSplit');
                     splitPdfFile = null;
                     return;
                 }
@@ -1624,7 +1624,7 @@
 
             } catch (error) {
                 hideProgress('progressBarSplit', 'progressFillSplit');
-                showStatus(`❌ Error loading PDF: ${error.message}`, 'error', 'statusSplit');
+                showStatus(`<span class="status-icon status-error"></span> Error loading PDF: ${error.message}`, 'error', 'statusSplit');
                 console.error('Split PDF load error:', error);
                 splitPdfFile = null;
             }
@@ -1771,12 +1771,12 @@
                     updateProgress(100, 'progressBarSplit', 'progressFillSplit');
 
                     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-                    showStatus(`✅ Extracted all ${totalPages} pages as individual PDFs — ZIP download started (${elapsed}s).`, 'success', 'statusSplit');
+                    showStatus(`<span class="status-icon status-success"></span> Extracted all ${totalPages} pages as individual PDFs — ZIP download started (${elapsed}s).`, 'success', 'statusSplit');
 
                 } else {
                     // mode === 'selected' — extract selected pages
                     if (splitSelectedPages.size === 0) {
-                        showStatus('❌ No pages selected. Click page thumbnails or use the range input to select pages.', 'error', 'statusSplit');
+                        showStatus('<span class="status-icon status-error"></span> No pages selected. Click page thumbnails or use the range input to select pages.', 'error', 'statusSplit');
                         return;
                     }
 
@@ -1822,14 +1822,14 @@
 
                     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
                     const modeLabel = outputMode === 'individual' ? 'as individual PDFs' : 'as one PDF';
-                    showStatus(`✅ Extracted ${indices.length} page${indices.length !== 1 ? 's' : ''} ${modeLabel} — ZIP download started (${elapsed}s).`, 'success', 'statusSplit');
+                    showStatus(`<span class="status-icon status-success"></span> Extracted ${indices.length} page${indices.length !== 1 ? 's' : ''} ${modeLabel} — ZIP download started (${elapsed}s).`, 'success', 'statusSplit');
                 }
 
                 setTimeout(() => hideProgress('progressBarSplit', 'progressFillSplit'), 1500);
 
             } catch (error) {
                 hideProgress('progressBarSplit', 'progressFillSplit');
-                showStatus(`❌ Error: ${error.message}`, 'error', 'statusSplit');
+                showStatus(`<span class="status-icon status-error"></span> Error: ${error.message}`, 'error', 'statusSplit');
                 console.error('Split PDF error:', error);
             } finally {
                 extractAllBtnSplit.disabled = false;
@@ -2116,16 +2116,16 @@
 
                 const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
                 if (successCount > 0) {
-                    showStatus(`✅ Compressed ${successCount} of ${totalFiles} file${totalFiles !== 1 ? 's' : ''} (${elapsed}s).`, 'success', 'statusCompress');
+                    showStatus(`<span class="status-icon status-success"></span> Compressed ${successCount} of ${totalFiles} file${totalFiles !== 1 ? 's' : ''} (${elapsed}s).`, 'success', 'statusCompress');
                 } else {
-                    showStatus(`❌ No files could be compressed. Check error messages above.`, 'error', 'statusCompress');
+                    showStatus(`<span class="status-icon status-error"></span> No files could be compressed. Check error messages above.`, 'error', 'statusCompress');
                 }
 
                 setTimeout(() => hideProgress('progressBarCompress', 'progressFillCompress'), 1500);
 
             } catch (error) {
                 hideProgress('progressBarCompress', 'progressFillCompress');
-                showStatus(`❌ Error: ${error.message}`, 'error', 'statusCompress');
+                showStatus(`<span class="status-icon status-error"></span> Error: ${error.message}`, 'error', 'statusCompress');
                 console.error('Compress PDF error:', error);
             } finally {
                 compressBtnCompress.disabled = false;
@@ -2166,7 +2166,7 @@
             resultEl.innerHTML = `
                 <div class="compress-result-info">
                     <div class="compress-result-name">${escapeHtml(fileName)}</div>
-                    <div class="compress-result-error">❌ ${escapeHtml(errorMsg)}</div>
+                    <div class="compress-result-error"><span class="status-icon status-error"></span> ${escapeHtml(errorMsg)}</div>
                 </div>
             `;
             compressResultsList.appendChild(resultEl);
@@ -2312,7 +2312,7 @@
                 URL.revokeObjectURL(url);
                 document.body.removeChild(a);
 
-                showStatus('✅ PDF merged successfully! Download started.', 'success', 'statusMerge');
+                showStatus('<span class="status-icon status-success"></span> PDF merged successfully! Download started.', 'success', 'statusMerge');
 
                 showMergeStats({
                     filesProcessed: processedCount,
@@ -2327,7 +2327,7 @@
 
             } catch (error) {
                 hideProgress('progressBarMerge', 'progressFillMerge');
-                showStatus(`❌ Error: ${error.message}`, 'error', 'statusMerge');
+                showStatus(`<span class="status-icon status-error"></span> Error: ${error.message}`, 'error', 'statusMerge');
                 console.error('PDF merge error:', error);
             } finally {
                 submitBtnMerge.disabled = false;
@@ -2477,7 +2477,7 @@
                     </div>
                 `).join('');
 
-                showStatus(`✅ Successfully converted ${numPages} pages to images!`, 'success', 'statusImages');
+                showStatus(`<span class="status-icon status-success"></span> Successfully converted ${numPages} pages to images!`, 'success', 'statusImages');
 
                 setTimeout(() => {
                     hideProgress('progressBarImages', 'progressFillImages');
@@ -2485,7 +2485,7 @@
 
             } catch (error) {
                 hideProgress('progressBarImages', 'progressFillImages');
-                showStatus(`❌ Error: ${error.message}`, 'error', 'statusImages');
+                showStatus(`<span class="status-icon status-error"></span> Error: ${error.message}`, 'error', 'statusImages');
                 console.error('PDF to images error:', error);
             } finally {
                 submitBtnImages.disabled = false;
@@ -2616,8 +2616,8 @@
                         <div class="file-content">
                             <div class="file-name">${escapeHtml(file.name)}</div>
                             <div class="file-details">
-                                <span>${file.type.includes('pdf') ? '📄' : '🖼️'} ${(file.size / 1024 / 1024).toFixed(2)} MB</span>
-                                <span>📅 ${new Date(file.lastModified).toLocaleDateString()}</span>
+                                <span>${(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                                <span>${new Date(file.lastModified).toLocaleDateString()}</span>
                             </div>
                         </div>
                     </div>
@@ -2876,7 +2876,7 @@
                     updateProgress(progress, 'progressBarWatermark', 'progressFillWatermark');
                 }
 
-                showStatus(`✅ Successfully applied watermarks to ${processedCount} file(s)!`, 'success', 'statusWatermark');
+                showStatus(`<span class="status-icon status-success"></span> Successfully applied watermarks to ${processedCount} file(s)!`, 'success', 'statusWatermark');
 
                 setTimeout(() => {
                     hideProgress('progressBarWatermark', 'progressFillWatermark');
@@ -2884,7 +2884,7 @@
 
             } catch (error) {
                 hideProgress('progressBarWatermark', 'progressFillWatermark');
-                showStatus(`❌ Error: ${error.message}`, 'error', 'statusWatermark');
+                showStatus(`<span class="status-icon status-error"></span> Error: ${error.message}`, 'error', 'statusWatermark');
                 console.error('Watermark error:', error);
             } finally {
                 submitBtnWatermark.disabled = false;
