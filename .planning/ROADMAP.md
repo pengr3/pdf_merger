@@ -69,8 +69,8 @@ Phases execute in numeric order: 1 → 2
 **Plans:** 2/2 plans complete
 
 Plans:
-- [ ] 02.1-01-PLAN.md -- Firebase Cloud Function: create functions/index.js with Ghostscript compressPdf endpoint, project config, user deploys
-- [ ] 02.1-02-PLAN.md -- Frontend integration: replace Heavy mode with Server mode, add privacy disclosure, wire compressFileServer(), end-to-end verification
+- [x] 02.1-01-PLAN.md -- Firebase Cloud Function: create functions/index.js with Ghostscript compressPdf endpoint, project config, user deploys
+- [x] 02.1-02-PLAN.md -- Frontend integration: replace Heavy mode with Server mode, add privacy disclosure, wire compressFileServer(), end-to-end verification
 
 ### Phase 3: Split Merge PDFs and PDF to Images into separate nav tabs
 

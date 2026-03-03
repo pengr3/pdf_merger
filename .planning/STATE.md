@@ -31,16 +31,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-02)
 
 **Core value:** Files never leave the user's device — every PDF operation runs 100% in-browser
-**Current focus:** Phase 02.1 — Server-Side PDF Compression via Firebase
+**Current focus:** Phase 02.1 complete — ready for verification
 
 ## Current Position
 
-Phase: 02.1 of 4+ (Server-Side PDF Compression via Firebase)
-Plan: 1 of 2 in current phase — CHECKPOINT (Task 1 complete, awaiting Firebase deployment from user)
-Status: Plan 02.1-01 Task 1 complete — Cloud Function code written, awaiting user Firebase project setup + deployment + URL
-Last activity: 2026-03-03 — Phase 02.1 Plan 01 Task 1 complete (compressPdf Cloud Function, firebase.json, .firebaserc, npm install)
+Phase: 02.1 of 4+ (Server-Side PDF Compression via Firebase) — ALL PLANS COMPLETE
+Plan: 2 of 2 complete
+Status: Both plans executed, SUMMARYs created, awaiting verification
+Last activity: 2026-03-03 — Phase 02.1 Plan 02 complete (frontend Server mode integration, end-to-end verified)
 
-Progress: [███████░░░] 70%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -112,5 +112,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: 02.1-01 checkpoint:human-action — Task 1 complete (Cloud Function code + Firebase config created), awaiting user Firebase project creation, Blaze plan upgrade, deploy, and endpoint URL
+Stopped at: Phase 02.1 complete — all plans executed, pending verification
 Resume file: None
