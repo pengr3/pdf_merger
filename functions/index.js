@@ -94,7 +94,7 @@ exports.compressPdf = onRequest(
     await new Promise((resolve, reject) => {
       const bb = busboy({
         headers: req.headers,
-        limits: { fileSize: 50 * 1024 * 1024 } // 50 MB file size limit
+        limits: { fileSize: 250 * 1024 * 1024 } // 250 MB file size limit
       });
 
       bb.on('file', (fieldname, file, info) => {

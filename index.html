@@ -1043,7 +1043,7 @@
             <div class="upload-area" id="uploadAreaSplit">
                 <div class="upload-icon" style="font-size: 36px; color: #aaa;">&#8593;</div>
                 <div class="upload-text">Click to upload or drag & drop</div>
-                <div class="upload-hint">Upload a single PDF file (max 80 MB)</div>
+                <div class="upload-hint">Upload a single PDF file (max 250 MB)</div>
                 <input type="file" id="fileInputSplit" accept=".pdf,application/pdf" />
             </div>
 
@@ -1135,7 +1135,7 @@
             <div class="upload-area" id="uploadAreaCompress">
                 <div class="upload-icon" style="font-size: 36px; color: #aaa;">&#8593;</div>
                 <div class="upload-text">Click to upload or drag & drop</div>
-                <div class="upload-hint">Upload one or more PDF files (max 80 MB each)</div>
+                <div class="upload-hint">Upload one or more PDF files (max 250 MB each)</div>
                 <input type="file" id="fileInputCompress" accept=".pdf,application/pdf" multiple />
             </div>
 
@@ -1500,8 +1500,8 @@
 
             // File size gate — must check before reading (SPLT concern from STATE.md)
             const fileSizeMB = splitPdfFile.size / (1024 * 1024);
-            if (fileSizeMB > 80) {
-                showStatus('<span class="status-icon status-error"></span> File too large (max 80 MB). Please use a smaller PDF.', 'error', 'statusSplit');
+            if (fileSizeMB > 250) {
+                showStatus('<span class="status-icon status-error"></span> File too large (max 250 MB). Please use a smaller PDF.', 'error', 'statusSplit');
                 splitPdfFile = null;
                 return;
             }
@@ -1870,9 +1870,9 @@
         function addCompressFiles(newFiles) {
             for (const file of newFiles) {
                 const sizeMB = file.size / (1024 * 1024);
-                if (sizeMB > 80) {
-                    // Reject files over 80 MB — same gate as Split PDF
-                    showStatus(`File "${file.name}" exceeds 80 MB limit and was skipped.`, 'error', 'statusCompress');
+                if (sizeMB > 250) {
+                    // Reject files over 250 MB — same gate as Split PDF
+                    showStatus(`File "${file.name}" exceeds 250 MB limit and was skipped.`, 'error', 'statusCompress');
                     continue;
                 }
                 compressFiles.push(file);
