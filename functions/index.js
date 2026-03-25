@@ -108,7 +108,7 @@ exports.uploadChunk = onRequest(
     memory: '256MiB',
     timeoutSeconds: 120,
     region: 'us-central1',
-    maxInstances: 10
+    maxInstances: 5
   },
   async (req, res) => {
     if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
@@ -142,9 +142,16 @@ exports.uploadChunk = onRequest(
     const paddedIdx = String(idx).padStart(4, '0');
     const objectName = `compress-temp/${jobId}/${paddedIdx}.chunk`;
 
-    await getBucket().file(objectName).save(fileBuffer, {
-      metadata: { contentType: 'application/octet-stream' }
-    });
+    try {
+      await getBucket().file(objectName).save(fileBuffer, {
+        metadata: { contentType: 'application/octet-stream' }
+      });
+    } catch (err) {
+      console.error('Storage save failed:', err.message, err.code);
+      return res.status(500).json({
+        error: 'Storage error: ' + (err.message || String(err))
+      });
+    }
 
     return res.json({ received: true });
   }
@@ -181,35 +188,26 @@ exports.compressPdf = onRequest(
 
     // List all chunks for this job
     const prefix = `compress-temp/${jobId}/`;
-    let files;
+    let chunkFiles;
     try {
-      [files] = await getBucket().getFiles({ prefix });
+      [chunkFiles] = await getBucket().getFiles({ prefix });
     } catch (err) {
       console.error('Failed to list chunks:', err);
       return res.status(500).json({ error: 'Could not access storage' });
     }
 
-    if (!files || files.length === 0) {
+    if (!chunkFiles || chunkFiles.length === 0) {
       return res.status(400).json({ error: 'No chunks found for jobId. Upload may have failed or expired.' });
     }
 
-    // Sort by filename (padded index ensures correct order)
-    files.sort((a, b) => a.name.localeCompare(b.name));
-
-    // Download and concatenate all chunks
-    let pdfBuffer;
-    try {
-      const chunkBuffers = await Promise.all(files.map(f => f.download().then(([d]) => d)));
-      pdfBuffer = Buffer.concat(chunkBuffers);
-    } catch (err) {
-      console.error('Failed to download chunks:', err);
-      return res.status(500).json({ error: 'Could not read uploaded chunks' });
+    // Reject suspiciously large jobs (max 25 chunks × 20 MB = 500 MB)
+    if (chunkFiles.length > 25) {
+      await Promise.all(chunkFiles.map(f => f.delete().catch(() => {})));
+      return res.status(400).json({ error: 'Too many chunks — job rejected.' });
     }
 
-    // Delete all chunks (fire-and-forget)
-    Promise.all(files.map(f => f.delete())).catch(err =>
-      console.warn('Chunk cleanup failed:', err)
-    );
+    // Sort by filename (padded index ensures correct order)
+    chunkFiles.sort((a, b) => a.name.localeCompare(b.name));
 
     const presetConfig = GS_PRESETS[preset] || GS_PRESETS.balanced;
     const id = crypto.randomUUID();
@@ -217,6 +215,15 @@ exports.compressPdf = onRequest(
     const outputPath = path.join(os.tmpdir(), `${id}-output.pdf`);
 
     try {
+      // Download and concatenate all chunks
+      const chunkBuffers = await Promise.all(chunkFiles.map(f => f.download().then(([d]) => d)));
+      const pdfBuffer = Buffer.concat(chunkBuffers);
+
+      // Guard against oversized reassembled files
+      if (pdfBuffer.length > 500 * 1024 * 1024) {
+        return res.status(400).json({ error: 'Reassembled file exceeds 500 MB limit.' });
+      }
+
       await fs.writeFile(inputPath, pdfBuffer);
 
       await execFileAsync('gs', [
@@ -264,8 +271,11 @@ exports.compressPdf = onRequest(
       return res.status(500).json({ error: 'Compression failed' });
 
     } finally {
+      // Always delete: /tmp files on this instance
       await fs.unlink(inputPath).catch(() => {});
       await fs.unlink(outputPath).catch(() => {});
+      // Always delete: Cloud Storage chunks — guaranteed even on crash or error
+      await Promise.all(chunkFiles.map(f => f.delete().catch(() => {})));
     }
   }
 );
