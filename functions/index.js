@@ -1,14 +1,14 @@
 // functions/index.js
 // Ghostscript PDF compression via Firebase Cloud Functions 2nd gen
-// Receives a PDF via multipart POST or via Cloud Storage reference, compresses with Ghostscript.
+// Receives a PDF via chunked upload (bypasses Cloud Run's 32 MB request body limit).
 //
-// Upload flow for large files (>~20 MB):
-//   1. POST /getUploadUrl  → { uploadUrl (signed PUT URL), objectName }
-//   2. PUT  uploadUrl       → upload PDF directly to Cloud Storage (no Cloud Run size limit)
-//   3. POST /compressPdf   → { objectName, preset }  (tiny JSON, triggers compression)
+// Upload flow for all files:
+//   1. POST /uploadChunk  (repeat per 20 MB chunk) → { received: true }
+//   2. POST /compressPdf  → { jobId, preset }  →  compressed PDF binary
 //
-// Legacy flow for small files:
-//   1. POST /compressPdf   → multipart form with 'pdf' file and 'preset' field
+// Each chunk is a multipart POST with fields: jobId, chunkIndex, plus a 'chunk' file.
+// The function stores each chunk in Cloud Storage via admin SDK (no signing needed).
+// compressPdf reassembles all chunks, runs Ghostscript, returns the result.
 
 const { onRequest } = require('firebase-functions/v2/https');
 const admin = require('firebase-admin');
@@ -24,8 +24,6 @@ const execFileAsync = promisify(execFile);
 
 admin.initializeApp();
 
-// Default Cloud Storage bucket — admin SDK reads FIREBASE_CONFIG automatically.
-// Override via STORAGE_BUCKET env var if your project uses a non-default bucket name.
 function getBucket() {
   return process.env.STORAGE_BUCKET
     ? admin.storage().bucket(process.env.STORAGE_BUCKET)
@@ -33,102 +31,129 @@ function getBucket() {
 }
 
 // --- Rate Limiting / Spike Detection ---
-// In-memory sliding window — resets on cold start, self-heals within seconds under attack
-const REQUEST_LOG = [];          // global timestamps
-const IP_LOG = new Map();        // ip -> [timestamps]
-const GLOBAL_LIMIT = 30;        // max requests per minute across all IPs
-const PER_IP_LIMIT = 5;         // max requests per minute per IP
-const WINDOW_MS = 60 * 1000;    // 1-minute sliding window
+const REQUEST_LOG = [];
+const IP_LOG = new Map();
+const GLOBAL_LIMIT = 60;
+const PER_IP_LIMIT = 20;
+const WINDOW_MS = 60 * 1000;
 
 function isRateLimited(ip) {
   const now = Date.now();
   const cutoff = now - WINDOW_MS;
-
-  // Prune global log
   while (REQUEST_LOG.length && REQUEST_LOG[0] < cutoff) REQUEST_LOG.shift();
-
-  // Prune per-IP log
   const ipLog = IP_LOG.get(ip) || [];
   while (ipLog.length && ipLog[0] < cutoff) ipLog.shift();
-
-  // Check limits
   if (REQUEST_LOG.length >= GLOBAL_LIMIT) return 'global';
   if (ipLog.length >= PER_IP_LIMIT) return 'ip';
-
-  // Record this request
   REQUEST_LOG.push(now);
   ipLog.push(now);
   IP_LOG.set(ip, ipLog);
   return false;
 }
 
-// Ghostscript preset configurations — fully explicit, no -dPDFSETTINGS
-// -dPDFSETTINGS overrides custom DPI flags, so we set ALL parameters manually.
-// QFactor controls JPEG quality: 0.1 = best quality, 1.0 = worst quality
-// Target savings are approximate — actual results depend on PDF content (image vs text ratio)
+// Ghostscript preset configurations
 const GS_PRESETS = {
-  best: {
-    // Target: ~30% file size saving — minimal compression, highest quality
-    dpi: 150,
-    qfactor: 0.30
-  },
-  balanced: {
-    // Target: ~50% file size saving — good balance
-    dpi: 144,
-    qfactor: 0.18
-  },
-  compressed: {
-    // Target: ~90% file size saving — maximum compression
-    dpi: 36,
-    qfactor: 0.90
-  }
+  best:       { dpi: 150, qfactor: 0.30 },
+  balanced:   { dpi: 144, qfactor: 0.18 },
+  compressed: { dpi: 36,  qfactor: 0.90 }
 };
 
+// Validate jobId: must be a standard UUID (prevents path traversal)
+function isValidJobId(id) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(id);
+}
+
+// Parse a multipart request with busboy, resolving to { fields, fileBuffer }
+// fileFieldName: name of the file field to capture
+function parseMultipart(req, fileFieldName) {
+  return new Promise((resolve, reject) => {
+    const fields = {};
+    let fileBuffer = null;
+
+    const bb = busboy({
+      headers: req.headers,
+      limits: { fileSize: 22 * 1024 * 1024 } // 22 MB per chunk max
+    });
+
+    bb.on('file', (fieldname, file) => {
+      const chunks = [];
+      file.on('data', chunk => chunks.push(chunk));
+      file.on('end', () => {
+        if (fieldname === fileFieldName) {
+          fileBuffer = Buffer.concat(chunks);
+        }
+      });
+    });
+
+    bb.on('field', (name, value) => { fields[name] = value; });
+    bb.on('close', () => resolve({ fields, fileBuffer }));
+    bb.on('error', reject);
+
+    if (req.rawBody) {
+      bb.end(req.rawBody);
+    } else {
+      req.pipe(bb);
+    }
+  });
+}
+
 // ---------------------------------------------------------------------------
-// getUploadUrl — issues a signed Cloud Storage PUT URL so the client can
-// upload a PDF directly (bypasses Cloud Run's 32 MB request body limit).
-// The client must then POST /compressPdf with { objectName, preset }.
+// uploadChunk — stores one chunk of a PDF upload into Cloud Storage.
+// Each chunk must be ≤ 20 MB (well within Cloud Run's 32 MB body limit).
+// Fields: jobId (UUID), chunkIndex (0-based integer), file field 'chunk'.
 // ---------------------------------------------------------------------------
-exports.getUploadUrl = onRequest(
+exports.uploadChunk = onRequest(
   {
     cors: true,
-    memory: '128MiB',
-    timeoutSeconds: 30,
+    memory: '256MiB',
+    timeoutSeconds: 120,
     region: 'us-central1',
-    maxInstances: 5
+    maxInstances: 10
   },
   async (req, res) => {
-    if (req.method !== 'POST') {
-      return res.status(405).send('Method Not Allowed');
-    }
+    if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
     const clientIp = req.headers['x-forwarded-for'] || req.ip || 'unknown';
-    const limited = isRateLimited(clientIp);
-    if (limited) {
+    if (isRateLimited(clientIp)) {
       return res.status(429).json({ error: 'Too many requests. Try again in a minute.' });
     }
 
-    const id = crypto.randomUUID();
-    const objectName = `compress-temp/${id}.pdf`;
+    let fields, fileBuffer;
+    try {
+      ({ fields, fileBuffer } = await parseMultipart(req, 'chunk'));
+    } catch (err) {
+      return res.status(400).json({ error: 'Failed to parse request' });
+    }
 
-    const [signedUrl] = await getBucket().file(objectName).getSignedUrl({
-      version: 'v4',
-      action: 'write',
-      expires: Date.now() + 15 * 60 * 1000, // 15-minute window to upload
-      contentType: 'application/pdf',
+    const { jobId, chunkIndex } = fields;
+
+    if (!jobId || !isValidJobId(jobId)) {
+      return res.status(400).json({ error: 'Invalid jobId' });
+    }
+    const idx = parseInt(chunkIndex, 10);
+    if (isNaN(idx) || idx < 0 || idx > 999) {
+      return res.status(400).json({ error: 'Invalid chunkIndex' });
+    }
+    if (!fileBuffer || fileBuffer.length === 0) {
+      return res.status(400).json({ error: 'No chunk data received' });
+    }
+
+    // Store chunk: compress-temp/{jobId}/{0000}.chunk
+    const paddedIdx = String(idx).padStart(4, '0');
+    const objectName = `compress-temp/${jobId}/${paddedIdx}.chunk`;
+
+    await getBucket().file(objectName).save(fileBuffer, {
+      metadata: { contentType: 'application/octet-stream' }
     });
 
-    return res.json({ uploadUrl: signedUrl, objectName });
+    return res.json({ received: true });
   }
 );
 
 // ---------------------------------------------------------------------------
-// compressPdf — compresses a PDF using Ghostscript.
-// Accepts two request shapes:
-//   A) application/json  { objectName: 'compress-temp/uuid.pdf', preset: 'balanced' }
-//      → reads file from Cloud Storage (new path for large files)
-//   B) multipart/form-data  { pdf: <file>, preset: 'balanced' }
-//      → reads file from request body (legacy path, works up to ~30 MB)
+// compressPdf — reassembles chunks from Cloud Storage, compresses with
+// Ghostscript, and returns the compressed PDF binary.
+// Body (JSON): { jobId: 'uuid', preset: 'balanced' }
 // ---------------------------------------------------------------------------
 exports.compressPdf = onRequest(
   {
@@ -139,97 +164,54 @@ exports.compressPdf = onRequest(
     maxInstances: 2
   },
   async (req, res) => {
-    // Only accept POST requests
-    if (req.method !== 'POST') {
-      return res.status(405).send('Method Not Allowed');
-    }
+    if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
-    // Spike detection — reject before any file parsing (near-zero cost)
     const clientIp = req.headers['x-forwarded-for'] || req.ip || 'unknown';
-    const limited = isRateLimited(clientIp);
-    if (limited) {
+    if (isRateLimited(clientIp)) {
       return res.status(429).json({ error: 'Too many requests. Try again in a minute.' });
     }
 
-    let pdfBuffer = null;
-    let preset = 'balanced';
-    let storageObjectName = null; // set when file came from Cloud Storage
+    const body = req.body;
+    const jobId = body?.jobId;
+    const preset = body?.preset || 'balanced';
 
-    const contentType = req.headers['content-type'] || '';
-
-    if (contentType.startsWith('application/json')) {
-      // --- New path: client uploaded to Cloud Storage, just pass the object reference ---
-      const body = req.body;
-      storageObjectName = body?.objectName;
-      preset = body?.preset || 'balanced';
-
-      // Validate objectName to prevent path traversal
-      if (
-        !storageObjectName ||
-        typeof storageObjectName !== 'string' ||
-        !storageObjectName.startsWith('compress-temp/') ||
-        storageObjectName.includes('..')
-      ) {
-        return res.status(400).json({ error: 'Invalid or missing objectName' });
-      }
-
-      try {
-        [pdfBuffer] = await getBucket().file(storageObjectName).download();
-      } catch (err) {
-        console.error('Failed to download from Cloud Storage:', err);
-        return res.status(400).json({ error: 'Could not retrieve file from storage. It may have expired.' });
-      }
-
-      // Delete the temp upload immediately after reading — we have it in memory
-      getBucket().file(storageObjectName).delete().catch(err =>
-        console.warn('Failed to delete temp upload:', storageObjectName, err)
-      );
-
-    } else {
-      // --- Legacy path: file in multipart request body (works up to ~30 MB) ---
-      await new Promise((resolve, reject) => {
-        const bb = busboy({
-          headers: req.headers,
-          limits: { fileSize: 32 * 1024 * 1024 } // Hard cap at Cloud Run's infrastructure limit
-        });
-
-        bb.on('file', (fieldname, file, info) => {
-          const chunks = [];
-          file.on('data', chunk => chunks.push(chunk));
-          file.on('end', () => {
-            if (fieldname === 'pdf') {
-              pdfBuffer = Buffer.concat(chunks);
-            }
-          });
-        });
-
-        bb.on('field', (fieldname, value) => {
-          if (fieldname === 'preset') preset = value;
-        });
-
-        bb.on('close', resolve);
-        bb.on('error', reject);
-
-        // Dual-path: Cloud Functions production provides req.rawBody;
-        // the local emulator may not — fall back to req.pipe(bb)
-        if (req.rawBody) {
-          bb.end(req.rawBody);
-        } else {
-          req.pipe(bb);
-        }
-      });
+    if (!jobId || !isValidJobId(jobId)) {
+      return res.status(400).json({ error: 'Invalid or missing jobId' });
     }
 
-    // Validate that a PDF was actually received
-    if (!pdfBuffer || pdfBuffer.length === 0) {
-      return res.status(400).json({ error: 'No PDF file received' });
+    // List all chunks for this job
+    const prefix = `compress-temp/${jobId}/`;
+    let files;
+    try {
+      [files] = await getBucket().getFiles({ prefix });
+    } catch (err) {
+      console.error('Failed to list chunks:', err);
+      return res.status(500).json({ error: 'Could not access storage' });
     }
 
-    // Map user-facing preset to config; default to balanced if unknown
+    if (!files || files.length === 0) {
+      return res.status(400).json({ error: 'No chunks found for jobId. Upload may have failed or expired.' });
+    }
+
+    // Sort by filename (padded index ensures correct order)
+    files.sort((a, b) => a.name.localeCompare(b.name));
+
+    // Download and concatenate all chunks
+    let pdfBuffer;
+    try {
+      const chunkBuffers = await Promise.all(files.map(f => f.download().then(([d]) => d)));
+      pdfBuffer = Buffer.concat(chunkBuffers);
+    } catch (err) {
+      console.error('Failed to download chunks:', err);
+      return res.status(500).json({ error: 'Could not read uploaded chunks' });
+    }
+
+    // Delete all chunks (fire-and-forget)
+    Promise.all(files.map(f => f.delete())).catch(err =>
+      console.warn('Chunk cleanup failed:', err)
+    );
+
     const presetConfig = GS_PRESETS[preset] || GS_PRESETS.balanced;
-
-    // Generate unique temp file names to prevent concurrent request collisions
-    // CRITICAL: Never use static paths like /tmp/input.pdf — concurrent requests will corrupt
     const id = crypto.randomUUID();
     const inputPath = path.join(os.tmpdir(), `${id}-input.pdf`);
     const outputPath = path.join(os.tmpdir(), `${id}-output.pdf`);
@@ -237,23 +219,12 @@ exports.compressPdf = onRequest(
     try {
       await fs.writeFile(inputPath, pdfBuffer);
 
-      // Invoke Ghostscript via child_process.execFile (system binary at /usr/bin/gs)
-      // All parameters set explicitly — do NOT use -dPDFSETTINGS (it overrides custom flags)
-      // CRITICAL flags:
-      //   -q          : quiet, suppress normal output
-      //   -dNOPAUSE   : no interactive pause between pages (required for non-interactive)
-      //   -dBATCH     : exit after processing (required for non-interactive)
-      //   -dSAFER     : restrict file access for security
       await execFileAsync('gs', [
-        '-q',
-        '-dNOPAUSE',
-        '-dBATCH',
-        '-dSAFER',
+        '-q', '-dNOPAUSE', '-dBATCH', '-dSAFER',
         '-sDEVICE=pdfwrite',
         '-dCompatibilityLevel=1.4',
         '-dEmbedAllFonts=true',
         '-dSubsetFonts=true',
-        // Image downsampling
         '-dDownsampleColorImages=true',
         '-dDownsampleGrayImages=true',
         '-dDownsampleMonoImages=true',
@@ -264,7 +235,6 @@ exports.compressPdf = onRequest(
         `-dColorImageResolution=${presetConfig.dpi}`,
         `-dGrayImageResolution=${presetConfig.dpi}`,
         `-dMonoImageResolution=${presetConfig.dpi}`,
-        // JPEG quality via QFactor
         '-dAutoFilterColorImages=false',
         '-dAutoFilterGrayImages=false',
         '-dColorImageFilter=/DCTEncode',
@@ -278,7 +248,6 @@ exports.compressPdf = onRequest(
 
       const compressedBuffer = await fs.readFile(outputPath);
 
-      // Guard: if compression made the file bigger, return the original
       if (compressedBuffer.length >= pdfBuffer.length) {
         res.set('Content-Type', 'application/pdf');
         res.set('Content-Disposition', 'attachment; filename="compressed.pdf"');
@@ -286,8 +255,6 @@ exports.compressPdf = onRequest(
         return res.status(200).send(pdfBuffer);
       }
 
-      // Return compressed PDF binary
-      // CRITICAL: Use res.set() before res.send() — do not manually set headers after send
       res.set('Content-Type', 'application/pdf');
       res.set('Content-Disposition', 'attachment; filename="compressed.pdf"');
       return res.status(200).send(compressedBuffer);
@@ -297,8 +264,6 @@ exports.compressPdf = onRequest(
       return res.status(500).json({ error: 'Compression failed' });
 
     } finally {
-      // Always clean up temp files — even on error
-      // Cloud Functions instances are reused; orphaned files accumulate in /tmp
       await fs.unlink(inputPath).catch(() => {});
       await fs.unlink(outputPath).catch(() => {});
     }

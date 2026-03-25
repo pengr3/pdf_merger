@@ -1795,7 +1795,8 @@
         // ========== COMPRESS PDF SECTION ==========
 
         const COMPRESS_PDF_ENDPOINT = 'https://us-central1-clmc-tools.cloudfunctions.net/compressPdf';
-        const GET_UPLOAD_URL_ENDPOINT = 'https://us-central1-clmc-tools.cloudfunctions.net/getUploadUrl';
+        const UPLOAD_CHUNK_ENDPOINT = 'https://us-central1-clmc-tools.cloudfunctions.net/uploadChunk';
+        const CHUNK_SIZE = 20 * 1024 * 1024; // 20 MB per chunk — well under Cloud Run's 32 MB limit
 
         // --- State ---
         let compressFiles = [];         // Array of File objects uploaded by user
@@ -1966,35 +1967,35 @@
         }
 
         // --- Server mode compression (COMP-02 Server) ---
-        // Uses a 3-step signed URL flow to bypass Cloud Run's 32 MB request body limit:
-        //   1. POST getUploadUrl  → signed PUT URL + objectName
-        //   2. PUT  signedUrl     → upload PDF directly to Cloud Storage (no size limit)
-        //   3. POST compressPdf   → { objectName, preset }  (tiny JSON, triggers Ghostscript)
+        // Bypasses Cloud Run's 32 MB request body limit via chunked upload:
+        //   1. Split file into 20 MB chunks, POST each to /uploadChunk
+        //   2. POST /compressPdf with { jobId, preset } — function reassembles + compresses
         async function compressFileServer(file, preset) {
-            // Step 1: get a signed Cloud Storage upload URL
-            const urlResp = await fetch(GET_UPLOAD_URL_ENDPOINT, { method: 'POST' });
-            if (!urlResp.ok) {
-                let errorMsg = 'Could not get upload URL';
-                try { const b = await urlResp.json(); errorMsg = b.error || errorMsg; } catch (_) {}
-                throw new Error(errorMsg);
-            }
-            const { uploadUrl, objectName } = await urlResp.json();
+            const jobId = crypto.randomUUID();
+            const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
 
-            // Step 2: upload PDF directly to Cloud Storage (bypasses Cloud Run size limit)
-            const uploadResp = await fetch(uploadUrl, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/pdf' },
-                body: file
-            });
-            if (!uploadResp.ok) {
-                throw new Error('Upload failed: ' + uploadResp.status);
+            // Step 1: upload chunks sequentially (each ≤ 20 MB, under Cloud Run limit)
+            for (let i = 0; i < totalChunks; i++) {
+                const start = i * CHUNK_SIZE;
+                const chunk = file.slice(start, Math.min(start + CHUNK_SIZE, file.size));
+                const formData = new FormData();
+                formData.append('jobId', jobId);
+                formData.append('chunkIndex', String(i));
+                formData.append('chunk', chunk, 'chunk.bin');
+
+                const resp = await fetch(UPLOAD_CHUNK_ENDPOINT, { method: 'POST', body: formData });
+                if (!resp.ok) {
+                    let errorMsg = `Chunk ${i + 1}/${totalChunks} upload failed`;
+                    try { const b = await resp.json(); errorMsg = b.error || errorMsg; } catch (_) {}
+                    throw new Error(errorMsg);
+                }
             }
 
-            // Step 3: trigger compression — payload is just the storage path (a few bytes)
+            // Step 2: trigger compression with just the job ID (tiny JSON payload)
             const compressResp = await fetch(COMPRESS_PDF_ENDPOINT, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ objectName, preset })
+                body: JSON.stringify({ jobId, preset })
             });
 
             if (!compressResp.ok) {
