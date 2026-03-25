@@ -1,8 +1,17 @@
 // functions/index.js
 // Ghostscript PDF compression via Firebase Cloud Functions 2nd gen
-// Receives a PDF via multipart POST, compresses with Ghostscript, returns compressed PDF binary.
+// Receives a PDF via multipart POST or via Cloud Storage reference, compresses with Ghostscript.
+//
+// Upload flow for large files (>~20 MB):
+//   1. POST /getUploadUrl  → { uploadUrl (signed PUT URL), objectName }
+//   2. PUT  uploadUrl       → upload PDF directly to Cloud Storage (no Cloud Run size limit)
+//   3. POST /compressPdf   → { objectName, preset }  (tiny JSON, triggers compression)
+//
+// Legacy flow for small files:
+//   1. POST /compressPdf   → multipart form with 'pdf' file and 'preset' field
 
 const { onRequest } = require('firebase-functions/v2/https');
+const admin = require('firebase-admin');
 const busboy = require('busboy');
 const { execFile } = require('child_process');
 const { promisify } = require('util');
@@ -12,6 +21,16 @@ const fs = require('fs/promises');
 const crypto = require('crypto');
 
 const execFileAsync = promisify(execFile);
+
+admin.initializeApp();
+
+// Default Cloud Storage bucket — admin SDK reads FIREBASE_CONFIG automatically.
+// Override via STORAGE_BUCKET env var if your project uses a non-default bucket name.
+function getBucket() {
+  return process.env.STORAGE_BUCKET
+    ? admin.storage().bucket(process.env.STORAGE_BUCKET)
+    : admin.storage().bucket();
+}
 
 // --- Rate Limiting / Spike Detection ---
 // In-memory sliding window — resets on cold start, self-heals within seconds under attack
@@ -65,10 +84,56 @@ const GS_PRESETS = {
   }
 };
 
+// ---------------------------------------------------------------------------
+// getUploadUrl — issues a signed Cloud Storage PUT URL so the client can
+// upload a PDF directly (bypasses Cloud Run's 32 MB request body limit).
+// The client must then POST /compressPdf with { objectName, preset }.
+// ---------------------------------------------------------------------------
+exports.getUploadUrl = onRequest(
+  {
+    cors: true,
+    memory: '128MiB',
+    timeoutSeconds: 30,
+    region: 'us-central1',
+    maxInstances: 5
+  },
+  async (req, res) => {
+    if (req.method !== 'POST') {
+      return res.status(405).send('Method Not Allowed');
+    }
+
+    const clientIp = req.headers['x-forwarded-for'] || req.ip || 'unknown';
+    const limited = isRateLimited(clientIp);
+    if (limited) {
+      return res.status(429).json({ error: 'Too many requests. Try again in a minute.' });
+    }
+
+    const id = crypto.randomUUID();
+    const objectName = `compress-temp/${id}.pdf`;
+
+    const [signedUrl] = await getBucket().file(objectName).getSignedUrl({
+      version: 'v4',
+      action: 'write',
+      expires: Date.now() + 15 * 60 * 1000, // 15-minute window to upload
+      contentType: 'application/pdf',
+    });
+
+    return res.json({ uploadUrl: signedUrl, objectName });
+  }
+);
+
+// ---------------------------------------------------------------------------
+// compressPdf — compresses a PDF using Ghostscript.
+// Accepts two request shapes:
+//   A) application/json  { objectName: 'compress-temp/uuid.pdf', preset: 'balanced' }
+//      → reads file from Cloud Storage (new path for large files)
+//   B) multipart/form-data  { pdf: <file>, preset: 'balanced' }
+//      → reads file from request body (legacy path, works up to ~30 MB)
+// ---------------------------------------------------------------------------
 exports.compressPdf = onRequest(
   {
     cors: true,
-    memory: '512MiB',
+    memory: '1GiB',
     timeoutSeconds: 300,
     region: 'us-central1',
     maxInstances: 2
@@ -86,42 +151,74 @@ exports.compressPdf = onRequest(
       return res.status(429).json({ error: 'Too many requests. Try again in a minute.' });
     }
 
-    // Parse multipart form data using busboy
-    // CRITICAL: Do NOT use Multer — it is broken in Cloud Functions (body pre-parsed by middleware)
     let pdfBuffer = null;
-    let preset = 'balanced'; // default preset
+    let preset = 'balanced';
+    let storageObjectName = null; // set when file came from Cloud Storage
 
-    await new Promise((resolve, reject) => {
-      const bb = busboy({
-        headers: req.headers,
-        limits: { fileSize: 250 * 1024 * 1024 } // 250 MB file size limit
-      });
+    const contentType = req.headers['content-type'] || '';
 
-      bb.on('file', (fieldname, file, info) => {
-        const chunks = [];
-        file.on('data', chunk => chunks.push(chunk));
-        file.on('end', () => {
-          if (fieldname === 'pdf') {
-            pdfBuffer = Buffer.concat(chunks);
-          }
-        });
-      });
+    if (contentType.startsWith('application/json')) {
+      // --- New path: client uploaded to Cloud Storage, just pass the object reference ---
+      const body = req.body;
+      storageObjectName = body?.objectName;
+      preset = body?.preset || 'balanced';
 
-      bb.on('field', (fieldname, value) => {
-        if (fieldname === 'preset') preset = value;
-      });
-
-      bb.on('close', resolve);
-      bb.on('error', reject);
-
-      // Dual-path: Cloud Functions production provides req.rawBody;
-      // the local emulator may not — fall back to req.pipe(bb)
-      if (req.rawBody) {
-        bb.end(req.rawBody);
-      } else {
-        req.pipe(bb);
+      // Validate objectName to prevent path traversal
+      if (
+        !storageObjectName ||
+        typeof storageObjectName !== 'string' ||
+        !storageObjectName.startsWith('compress-temp/') ||
+        storageObjectName.includes('..')
+      ) {
+        return res.status(400).json({ error: 'Invalid or missing objectName' });
       }
-    });
+
+      try {
+        [pdfBuffer] = await getBucket().file(storageObjectName).download();
+      } catch (err) {
+        console.error('Failed to download from Cloud Storage:', err);
+        return res.status(400).json({ error: 'Could not retrieve file from storage. It may have expired.' });
+      }
+
+      // Delete the temp upload immediately after reading — we have it in memory
+      getBucket().file(storageObjectName).delete().catch(err =>
+        console.warn('Failed to delete temp upload:', storageObjectName, err)
+      );
+
+    } else {
+      // --- Legacy path: file in multipart request body (works up to ~30 MB) ---
+      await new Promise((resolve, reject) => {
+        const bb = busboy({
+          headers: req.headers,
+          limits: { fileSize: 32 * 1024 * 1024 } // Hard cap at Cloud Run's infrastructure limit
+        });
+
+        bb.on('file', (fieldname, file, info) => {
+          const chunks = [];
+          file.on('data', chunk => chunks.push(chunk));
+          file.on('end', () => {
+            if (fieldname === 'pdf') {
+              pdfBuffer = Buffer.concat(chunks);
+            }
+          });
+        });
+
+        bb.on('field', (fieldname, value) => {
+          if (fieldname === 'preset') preset = value;
+        });
+
+        bb.on('close', resolve);
+        bb.on('error', reject);
+
+        // Dual-path: Cloud Functions production provides req.rawBody;
+        // the local emulator may not — fall back to req.pipe(bb)
+        if (req.rawBody) {
+          bb.end(req.rawBody);
+        } else {
+          req.pipe(bb);
+        }
+      });
+    }
 
     // Validate that a PDF was actually received
     if (!pdfBuffer || pdfBuffer.length === 0) {

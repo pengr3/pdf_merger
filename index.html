@@ -1795,6 +1795,7 @@
         // ========== COMPRESS PDF SECTION ==========
 
         const COMPRESS_PDF_ENDPOINT = 'https://us-central1-clmc-tools.cloudfunctions.net/compressPdf';
+        const GET_UPLOAD_URL_ENDPOINT = 'https://us-central1-clmc-tools.cloudfunctions.net/getUploadUrl';
 
         // --- State ---
         let compressFiles = [];         // Array of File objects uploaded by user
@@ -1965,27 +1966,47 @@
         }
 
         // --- Server mode compression (COMP-02 Server) ---
+        // Uses a 3-step signed URL flow to bypass Cloud Run's 32 MB request body limit:
+        //   1. POST getUploadUrl  → signed PUT URL + objectName
+        //   2. PUT  signedUrl     → upload PDF directly to Cloud Storage (no size limit)
+        //   3. POST compressPdf   → { objectName, preset }  (tiny JSON, triggers Ghostscript)
         async function compressFileServer(file, preset) {
-            const formData = new FormData();
-            formData.append('pdf', file);
-            formData.append('preset', preset);
+            // Step 1: get a signed Cloud Storage upload URL
+            const urlResp = await fetch(GET_UPLOAD_URL_ENDPOINT, { method: 'POST' });
+            if (!urlResp.ok) {
+                let errorMsg = 'Could not get upload URL';
+                try { const b = await urlResp.json(); errorMsg = b.error || errorMsg; } catch (_) {}
+                throw new Error(errorMsg);
+            }
+            const { uploadUrl, objectName } = await urlResp.json();
 
-            const response = await fetch(COMPRESS_PDF_ENDPOINT, {
+            // Step 2: upload PDF directly to Cloud Storage (bypasses Cloud Run size limit)
+            const uploadResp = await fetch(uploadUrl, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/pdf' },
+                body: file
+            });
+            if (!uploadResp.ok) {
+                throw new Error('Upload failed: ' + uploadResp.status);
+            }
+
+            // Step 3: trigger compression — payload is just the storage path (a few bytes)
+            const compressResp = await fetch(COMPRESS_PDF_ENDPOINT, {
                 method: 'POST',
-                body: formData
-                // CRITICAL: Do NOT set Content-Type header — browser must set boundary automatically
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ objectName, preset })
             });
 
-            if (!response.ok) {
-                let errorMsg = 'Server error: ' + response.status;
+            if (!compressResp.ok) {
+                let errorMsg = 'Server error: ' + compressResp.status;
                 try {
-                    const errBody = await response.json();
+                    const errBody = await compressResp.json();
                     errorMsg = errBody.error || errorMsg;
                 } catch (_) {}
                 throw new Error(errorMsg);
             }
 
-            const arrayBuffer = await response.arrayBuffer();
+            const arrayBuffer = await compressResp.arrayBuffer();
             return new Uint8Array(arrayBuffer);
         }
 
@@ -2030,8 +2051,8 @@
                             compressedBytes = await compressFast(arrayBuffer);
                         } else {
                             // Server mode: send to Firebase Cloud Function
-                            if (file.size > 32 * 1024 * 1024) {
-                                renderCompressError(file.name, 'File exceeds 32 MB server mode limit. Use Fast mode for large files.');
+                            if (file.size > 500 * 1024 * 1024) {
+                                renderCompressError(file.name, 'File exceeds 500 MB server mode limit.');
                                 processedCount++;
                                 updateProgress((processedCount / totalFiles) * 100, 'progressBarCompress', 'progressFillCompress');
                                 continue;
